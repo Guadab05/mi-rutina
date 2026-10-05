@@ -99,16 +99,19 @@ a{color:inherit}
 .metric .v small{font-size:13px;font-weight:600;color:var(--mut);margin-left:2px}
 .metric .dl{font-size:12px;font-weight:650;margin-top:3px}
 .dl.good{color:var(--ok)} .dl.bad{color:var(--down)} .dl.neu{color:var(--mut)}
-.week{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
-.wd{font:inherit;color:inherit;cursor:pointer;border-radius:12px;padding:8px 2px 9px;text-align:center;background:var(--surface);border:1px solid var(--line);display:flex;flex-direction:column;align-items:center;gap:4px;min-height:84px;text-decoration:none}
+.week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.wd{min-width:0;font:inherit;color:inherit;cursor:pointer;border-radius:12px;padding:8px 1px 9px;text-align:center;background:var(--surface);border:1px solid var(--line);display:flex;flex-direction:column;align-items:center;gap:4px;min-height:84px;text-decoration:none}
 .wd b{font-size:13px}
-.wd .act{font-size:10.5px;line-height:1.15;color:var(--mut);font-weight:600}
+.wd .act{font-size:9px;line-height:1.15;color:var(--mut);font-weight:600;letter-spacing:-.02em;hyphens:auto;overflow-wrap:anywhere}
+@media (min-width:400px){.wd .act{font-size:10.5px}}
 .wd .dot{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--surface2);color:var(--mut)}
 .wd .dot svg{width:14px;height:14px}
 .wd.gym{background:color-mix(in srgb,var(--c) 10%,var(--surface));border-color:color-mix(in srgb,var(--c) 25%,var(--surface))}
 .wd.gym .act{color:var(--c)}
 .wd.today{outline:2.5px solid var(--ink);outline-offset:1px}
 .wd.done .dot{background:var(--ok);color:#fff}
+.wd.missed .dot{background:var(--down);color:#fff}
+.wd.missed{border-color:color-mix(in srgb,var(--down) 35%,var(--surface))}
 .blockbar{display:flex;align-items:center;gap:12px}
 .progress{flex:1;height:8px;border-radius:99px;background:var(--track);overflow:hidden}
 .progress i{display:block;height:100%;background:var(--primary);border-radius:99px}
@@ -250,7 +253,7 @@ textarea:focus,.field input:focus,.field select:focus{border-color:var(--c,var(-
 .checkrow{display:flex;align-items:center;gap:10px;font-size:15px;padding:6px 0}
 .checkrow input{width:22px;height:22px;accent-color:var(--primary)}
 .form{display:flex;flex-direction:column;gap:12px}
-.toast{position:fixed;left:50%;bottom:calc(var(--nav-h) + var(--safe-b) + 16px);transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--bg);padding:11px 16px;border-radius:13px;font-weight:650;font-size:14.5px;z-index:80;opacity:0;transition:all .2s;max-width:90vw;text-align:center}
+.toast{pointer-events:none;position:fixed;left:50%;bottom:calc(var(--nav-h) + var(--safe-b) + 16px);transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--bg);padding:11px 16px;border-radius:13px;font-weight:650;font-size:14.5px;z-index:80;opacity:0;transition:all .2s;max-width:90vw;text-align:center}
 .toast.on{opacity:1;transform:translateX(-50%)}
 
 /* ============ Routine / edit ============ */
@@ -354,7 +357,8 @@ const P = {
 const ic = (n, s = 20) => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true">${P[n] || ''}</svg>`;
 
 /* ---------- 3. Datos semilla: la rutina original (fuente de verdad) ---------- */
-const DAY_COLORS = {mar:'#9C3D5A', jue:'#3D4C7D', sab:'#6A4277', run:'#2E7366'};
+const G_COLORS = {mar:'#9C3D5A', jue:'#3D4C7D', sab:'#6A4277', run:'#2E7366'};
+let DAY_COLORS = Object.assign({}, G_COLORS); // se ajusta según el perfil activo
 const RDL_TECH = ['Espalda neutra.','Rodillas ligeramente flexionadas.','Llevar la cadera hacia atrás.','Buscar tensión en glúteos e isquios.','No es necesario llegar con la barra al piso.','Bajar solamente hasta donde puedas mantener buena posición.'];
 const HT_TECH = ['Buscar extensión completa de cadera.','No hiperextender exageradamente la zona lumbar arriba.'];
 const ABD_TECH = ['Mantener control.','No balancear el cuerpo.','No reducir exageradamente el recorrido solamente para mover más peso.'];
@@ -366,7 +370,7 @@ function E(o) { // normaliza un ejercicio con valores por defecto
     tag:'', tech:[], warn:[], note:''}, o);
 }
 
-function seedDays() {
+function seedDaysGuada() {
   return [
     { key:'mar', weekday:2, name:'Martes', title:'Glúteos + cuádriceps + abdomen', color:DAY_COLORS.mar, intro:'', exercises:[
       E({id:'m1', name:'Hip Thrust', sets:4, repMin:6, repMax:8, weight:'60-90 kg totales', rir:'2', kind:'compound', bigJump:true, tag:'Prioridad alta',
@@ -428,7 +432,7 @@ function seedDays() {
     ]},
   ];
 }
-function seedRunning() {
+function seedCardioGuada() {
   return {
     warmup:['5-10 minutos caminando o trotando suavemente.'],
     main:['35-50 minutos.','Intensidad aeróbica cómoda/moderada.','Ritmo que permita hablar en frases.'],
@@ -437,17 +441,137 @@ function seedRunning() {
            'Si durante varias semanas empezás a reemplazar casi todos los sábados por running, conviene revisar la programación del gimnasio para no perder sistemáticamente el segundo estímulo fuerte de glúteos.'],
   };
 }
-const SCHEDULE = [ // índice = getDay()
+const SCHEDULE_GUADA = [ // índice = getDay()
   {label:'Descanso', type:'rest'}, {label:'Boxeo', type:'box'}, {label:'Gym', type:'gym', day:'mar'},
   {label:'Boxeo', type:'box'}, {label:'Gym', type:'gym', day:'jue'}, {label:'Boxeo', type:'box'}, {label:'Gym o running', type:'gym', day:'sab'},
 ];
+let SCHEDULE = SCHEDULE_GUADA;
+
+/* ---------- 3b. Perfiles ----------
+   Cada perfil tiene su rutina, su semana y sus datos guardados por separado en este dispositivo.
+   No es un login: es una separación práctica entre personas que usan la misma app. */
+const P_COLORS = {lun:'#9C3D5A', mar:'#3D4C7D', mie:'#B0603A', jue:'#6A4277', vie:'#3E6E5A', run:'#2F7A8A'};
+const P_HT_TECH = ['Extensión completa de cadera.','Controlar la bajada.','No hiperextender exageradamente la zona lumbar.','Mantener pelvis estable.','Progresar principalmente mediante carga o repeticiones.'];
+const P_RDL_TECH = ['Llevar la cadera hacia atrás.','Rodillas ligeramente flexionadas.','Espalda neutra.','Sentir tensión en glúteos e isquios.','No es necesario llegar al piso.','Detener el recorrido cuando se pierde la posición.'];
+function seedDaysPriscila() {
+  const C = P_COLORS;
+  return [
+    { key:'lun', weekday:1, name:'Lunes', title:'Glúteos', color:C.lun, intro:'', exercises:[
+      E({id:'pl1', name:'Hip Thrust', sets:4, repMin:6, repMax:8, weight:'50-80 kg', rir:'2', kind:'compound', tech:P_HT_TECH}),
+      E({id:'pl2', name:'Peso muerto rumano', sets:3, repMin:8, repMax:10, weight:'30-50 kg', rir:'2', kind:'compound', tech:P_RDL_TECH}),
+      E({id:'pl3', name:'Step Ups en Smith', sets:3, repMin:8, repMax:10, side:'pierna', weight:'20-40 kg totales, según la máquina Smith', rir:'1-2', kind:'compound', machine:true,
+        tech:['Elegir una altura que permita subir con control.','Impulsar principalmente con la pierna que está sobre el banco.','Evitar ayudarse excesivamente con la pierna que queda abajo.','Controlar especialmente la bajada.']}),
+      E({id:'pl4', name:'Patada en polea con pierna cruzada', sets:3, repMin:12, repMax:15, side:'pierna', weight:'7,5-15 kg', rir:'1-2', machine:true,
+        tech:['Movimiento controlado.','Pelvis estable.','Evitar girar todo el cuerpo para conseguir recorrido.']}),
+      E({id:'pl5', name:'Abductores en máquina o polea', sets:3, repMin:15, repMax:20, weight:'Máquina: 30-50 kg', rir:'1-2', machine:true,
+        warn:['La resistencia cambia muchísimo entre máquinas.'], tech:['Priorizar recorrido y control antes que mover muchas placas.']}),
+      E({id:'pl6', name:'Extensión de espalda enfocada en glúteo', sets:2, repMin:12, repMax:15, weight:'Peso corporal; después aprox. +5-10 kg', rir:'', load:'bodyweight',
+        tech:['Buscar movimiento principalmente desde la cadera.','Contraer glúteos.','Evitar terminar hiperextendiendo la zona lumbar.']}),
+    ]},
+    { key:'mar', weekday:2, name:'Martes', title:'Pecho + espalda + cardio', color:C.mar, intro:'', exercises:[
+      E({id:'pm1', name:'Pecho plano', sets:3, repMin:8, repMax:10, weight:'Mancuernas: 8-12 kg c/u · Barra: 20-35 kg totales · Máquina: 20-40 kg, según la máquina', rir:'2', kind:'compound', region:'upper',
+        note:'Usar la variante que ya realizás habitualmente.'}),
+      E({id:'pm2', name:'Pecho en banco inclinado', sets:3, repMin:8, repMax:10, weight:'Mancuernas: 6-10 kg c/u · Barra: 15-30 kg totales · Máquina: ajustar según resistencia', rir:'2', kind:'compound', region:'upper'}),
+      E({id:'pm3', name:'Remo con barra o polea', sets:3, repMin:8, repMax:12, weight:'Barra: 25-40 kg totales · Polea: 25-40 kg, según la máquina', rir:'2', kind:'compound', region:'upper'}),
+      E({id:'pm4', name:'Remo a un brazo con mancuerna', sets:3, repMin:10, repMax:12, side:'brazo', weight:'10-16 kg', rir:'1-2', kind:'compound', region:'upper',
+        tech:['Mantener el torso estable y evitar convertir cada repetición en una rotación completa del cuerpo.']}),
+      E({id:'pm5', name:'Dorsalera / Jalón al pecho', sets:3, repMin:8, repMax:10, weight:'25-40 kg', rir:'2', kind:'compound', region:'upper', machine:true}),
+      E({id:'pm6', name:'Lat Push Down', sets:2, repMin:12, repMax:15, weight:'12,5-25 kg', rir:'1-2', region:'upper', machine:true,
+        tech:['Mantener brazos prácticamente extendidos.','Realizar el movimiento desde hombros/dorsales.']}),
+      E({id:'pm7', name:'Face Pulls', sets:2, repMin:12, repMax:15, weight:'10-20 kg', rir:'1-2', region:'upper', machine:true,
+        tech:['Priorizar control y posición escapular.']}),
+      E({id:'pm8', name:'Extensión de espalda', sets:2, repMin:12, repMax:15, weight:'Peso corporal (inicialmente)', rir:'', load:'bodyweight',
+        tech:['Evitar hiperextender excesivamente la columna.']}),
+    ]},
+    { key:'mie', weekday:3, name:'Miércoles', title:'Cuádriceps', color:C.mie, intro:'', exercises:[
+      E({id:'pq1', name:'Prensa', sets:3, repMin:10, repMax:12, weight:'80-130 kg', rir:'2', kind:'compound', machine:true,
+        warn:['El peso de una prensa no es comparable entre máquinas. Usar el rango únicamente como punto de partida.']}),
+      E({id:'pq2', name:'Hack Squat', sets:3, repMin:8, repMax:10, weight:'30-60 kg cargados', rir:'2', kind:'compound', machine:true,
+        warn:['El peso depende muchísimo del carro, la inclinación y el diseño de la máquina.']}),
+      E({id:'pq3', name:'Goblet Squat con talones elevados', sets:3, repMin:10, repMax:12, weight:'12-20 kg', rir:'1-2', kind:'compound',
+        tech:['Talones elevados sobre disco.','Torso relativamente erguido.','Controlar la profundidad.','Buscar énfasis en cuádriceps.']}),
+      E({id:'pq4', name:'Estocada hacia adelante con pie delantero elevado', sets:2, repMin:10, repMax:12, side:'pierna', weight:'6-10 kg por mancuerna', rir:'1-2', kind:'compound',
+        tech:['Priorizar estabilidad y rango antes que aumentar carga.']}),
+      E({id:'pq5', name:'Extensión de cuádriceps en máquina', sets:3, repMin:12, repMax:15, weight:'20-35 kg', rir:'1-2', machine:true}),
+      E({id:'pq6', name:'Aducción de cadera', sets:2, repMin:15, repMax:20, weight:'30-50 kg', rir:'1-2', machine:true,
+        tech:['Mantener movimiento controlado.']}),
+    ]},
+    { key:'jue', weekday:4, name:'Jueves', title:'Hombros + brazos + cardio', color:C.jue, intro:'', exercises:[
+      E({id:'ph1', name:'Press militar', sets:3, repMin:8, repMax:10, weight:'Mancuernas: 6-10 kg c/u · Barra: aprox. 15-25 kg totales', rir:'2', kind:'compound', region:'upper'}),
+      E({id:'ph2', name:'Vuelos laterales con mancuernas', sets:3, repMin:12, repMax:15, weight:'3-6 kg por mancuerna', rir:'1-2', region:'upper',
+        tech:['Evitar balancear exageradamente el cuerpo para poder utilizar más peso.']}),
+      E({id:'ph3', name:'Rear Delt Fly', sets:3, setsMin:2, repMin:12, repMax:15, weight:'Aprox. 3-6 kg por mancuerna, o equivalente en máquina', rir:'1-2', region:'upper'}),
+      E({id:'ph4', name:'Curl con barra en polea', sets:3, repMin:10, repMax:12, weight:'10-20 kg', rir:'1-2', region:'upper', machine:true}),
+      E({id:'ph5', name:'Curl martillo con mancuernas', sets:2, repMin:10, repMax:12, weight:'6-10 kg por mancuerna', rir:'1-2', region:'upper'}),
+      E({id:'ph6', name:'Press francés con mancuerna', sets:2, repMin:10, repMax:12, weight:'8-14 kg', rir:'1-2', region:'upper'}),
+      E({id:'ph7', name:'Tríceps en polea sobre cabeza con cuerda', sets:2, repMin:10, repMax:15, weight:'10-20 kg', rir:'1-2', region:'upper', machine:true}),
+      E({id:'ph8', name:'Tríceps unilateral en polea', sets:2, repMin:12, repMax:15, side:'brazo', weight:'5-10 kg', rir:'1-2', region:'upper', machine:true}),
+    ]},
+    { key:'vie', weekday:5, name:'Viernes', title:'Femorales + gemelos', color:C.vie, intro:'', exercises:[
+      E({id:'pf1', name:'Peso muerto clásico', sets:3, repMin:5, repMax:6, weight:'35-55 kg', rir:'2-3', kind:'compound',
+        warn:['No entrenarlo sistemáticamente al fallo.'], tech:['Priorizar especialmente la técnica.']}),
+      E({id:'pf2', name:'Buenos días', sets:2, repMin:10, repMax:12, weight:'15-30 kg', rir:'2', kind:'compound',
+        warn:['Mantenerlo relativamente liviano: ya hay peso muerto clásico en la misma sesión.'], tech:['Mantener la columna estable.','Realizar el movimiento desde la cadera.']}),
+      E({id:'pf3', name:'Isquios acostada en máquina', sets:3, repMin:10, repMax:12, weight:'20-35 kg', rir:'1-2', machine:true}),
+      E({id:'pf4', name:'Sentadilla búlgara en Smith', sub:'Con pie de apoyo elevado', sets:3, repMin:8, repMax:10, side:'pierna', weight:'20-40 kg totales, según la Smith', rir:'1-2', kind:'compound', machine:true,
+        tech:['Buscar ejecución controlada y estabilidad.']}),
+      E({id:'pf5', name:'Isquios sentada unilateral', sets:3, repMin:10, repMax:12, side:'pierna', weight:'10-20 kg por lado, según la máquina', rir:'1-2', machine:true}),
+      E({id:'pf6', name:'Gemelos en prensa', sets:4, repMin:12, repMax:15, weight:'60-100 kg, según la prensa', rir:'1-2', machine:true,
+        tech:['Usar recorrido amplio.','Controlar tanto la subida como la bajada.']}),
+    ]},
+  ];
+}
+function seedCardioPriscila() {
+  return {
+    titles:['Cuándo','Opciones','Intensidad'],
+    warmup:['Martes: 20-30 min después de pecho/espalda.','Jueves: 20-30 min después de hombros/brazos.','Sábado: opcional 30-45 min, solo si NO tenés ningún entrenamiento pendiente.'],
+    main:['Caminata rápida.','Cinta con inclinación.','Bicicleta.','Elíptico.','Trote suave, si te gusta correr.'],
+    optional:['Moderada: respirar más fuerte pero todavía poder mantener una conversación.','No hace falta convertirlo en HIIT.'],
+    notes:['El cardio sirve como complemento del entrenamiento: no debe interferir con la recuperación de piernas ni sustituir el trabajo de fuerza.'],
+  };
+}
+const SCHEDULE_PRISCILA = [
+  {label:'Descanso', type:'rest'}, {label:'Glúteos', type:'gym', day:'lun'}, {label:'Pecho', type:'gym', day:'mar'},
+  {label:'Cuádr.', type:'gym', day:'mie'}, {label:'Hombros', type:'gym', day:'jue'}, {label:'Femoral', type:'gym', day:'vie'},
+  {label:'Recup.', type:'sat'},
+];
+const PROFILES = {
+  guada: {
+    id:'guada', name:'Guada', avatar:'#9C3D5A', desc:'Boxeo + gimnasio · glúteos como prioridad',
+    colors:G_COLORS, cardioColor:G_COLORS.run, schedule:SCHEDULE_GUADA, seedDays:seedDaysGuada, seedCardio:seedCardioGuada,
+    saturday:'choice', cardioLabel:'Running', activities:null, warmup:null, cardioAfter:{}, future:true,
+    rirText:'<b>RIR</b> = repeticiones en reserva. <b>RIR 2</b> = terminar la serie sintiendo que podrías realizar aproximadamente otras dos repeticiones correctamente.',
+    progress:null, // usa los textos originales con incrementos en kg
+  },
+  priscila: {
+    id:'priscila', name:'Priscila', avatar:'#3D4C7D', desc:'Gimnasio de lunes a viernes',
+    colors:P_COLORS, cardioColor:P_COLORS.run, schedule:SCHEDULE_PRISCILA, seedDays:seedDaysPriscila, seedCardio:seedCardioPriscila,
+    saturday:'recover', cardioLabel:'Cardio', activities:['Caminata rápida','Cinta con inclinación','Bicicleta','Elíptico','Trote suave','Otro'],
+    warmup:['5-8 minutos de caminata, bicicleta o movimiento suave.','Antes del primer ejercicio pesado: 2-3 series de aproximación, aumentando progresivamente la carga.','Estas series de calentamiento NO cuentan como series efectivas.'],
+    cardioAfter:{mar:true, jue:true}, cardioAfterText:'20-30 min de cardio moderado: caminata en cinta con inclinación, bicicleta o elíptico. Respirar más fuerte pero poder mantener una conversación; no hace falta HIIT.',
+    future:false,
+    rirText:'<b>RIR</b> = Repeticiones en Reserva. <b>RIR 2</b> significa terminar una serie sintiendo que todavía podrías hacer aproximadamente 2 repeticiones más con buena técnica.<br><br>No significa terminar totalmente descansada. Tampoco significa llegar al fallo.',
+    progress:{up:'Podés aumentar ligeramente la carga en la próxima sesión.', hold:'Mantener carga.', down:'Revisar carga o mantener hasta consolidar el rango.'},
+  },
+};
+let PID = null, PROFILE = PROFILES.guada;
+const seedDays = () => PROFILE.seedDays();
+const seedRunning = () => PROFILE.seedCardio();
+function setProfile(pid) {
+  PID = pid; PROFILE = PROFILES[pid];
+  SCHEDULE = PROFILE.schedule;
+  DAY_COLORS = Object.assign({}, PROFILE.colors, {run:PROFILE.cardioColor});
+  Store.KEY = 'state:' + pid; Store.LS = 'mi-rutina-state:' + pid; Store.legacy = pid === 'guada';
+  try { localStorage.setItem('mi-rutina-perfil', pid); } catch (e) {}
+}
+
 function defaultState() {
   const t = todayISO();
   return {
     app:'mi-rutina', schema:1, createdAt:Date.now(), updatedAt:Date.now(), lastBackupAt:null,
     activeBlockId:'b1',
     blocks:[{id:'b1', name:'Bloque 1', weeks:6, startDate:mondayOf(t), endDate:null, status:'active', days:seedDays(), running:seedRunning()}],
-    sessions:[], runs:[],
+    sessions:[], runs:[], weekMarks:{},
     measurements:[], // versión para hosting público: sin datos personales en el código
   };
 }
@@ -469,15 +593,21 @@ const Store = {
       try { localStorage.setItem('__t', '1'); localStorage.removeItem('__t'); this.mode = 'localstorage'; } catch (e2) { this.mode = 'memory'; }
     }
   },
-  async load() {
+  async readKey(key, ls) {
     let data = null;
     if (this.mode === 'indexeddb') {
       data = await new Promise(res => { try {
-        const g = this.db.transaction(this.OS, 'readonly').objectStore(this.OS).get(this.KEY);
+        const g = this.db.transaction(this.OS, 'readonly').objectStore(this.OS).get(key);
         g.onsuccess = () => res(g.result || null); g.onerror = () => res(null);
       } catch (e) { res(null); } });
     }
-    if (!data) { try { const t = localStorage.getItem(this.LS); if (t) data = JSON.parse(t); } catch (e) {} }
+    if (!data) { try { const t = localStorage.getItem(ls); if (t) data = JSON.parse(t); } catch (e) {} }
+    return data;
+  },
+  async load() {
+    let data = await this.readKey(this.KEY, this.LS);
+    // Datos guardados antes de que existieran los perfiles: pertenecen a Guada
+    if (!data && this.legacy) { data = await this.readKey('state', 'mi-rutina-state'); if (data) data.__migrated = true; }
     return data;
   },
   async save(obj) {
@@ -507,7 +637,8 @@ function normalize(st) {
   st.blocks = (st.blocks && st.blocks.length) ? st.blocks : d.blocks;
   st.blocks.forEach(b => { b.days = (b.days || []).map(day => Object.assign({intro:''}, day, {exercises:(day.exercises || []).map(E)})); b.running = b.running || seedRunning(); });
   if (!st.blocks.find(b => b.id === st.activeBlockId)) st.activeBlockId = st.blocks[st.blocks.length - 1].id;
-  st.sessions = st.sessions || []; st.runs = st.runs || []; st.measurements = st.measurements || [];
+  st.sessions = st.sessions || []; st.runs = st.runs || []; st.measurements = st.measurements || []; st.weekMarks = st.weekMarks || {};
+  st.profile = PID; delete st.__migrated;
   return st;
 }
 
@@ -521,7 +652,8 @@ function blockWeek(b, ref = todayISO()) {
 }
 function targetStr(ex) {
   const reps = ex.repMax && ex.repMax !== ex.repMin ? `${ex.repMin}-${ex.repMax}` : `${ex.repMin}`;
-  return `${ex.sets} × ${reps}${ex.unit === 'seg' ? ' s' : ''}${ex.side ? ' / ' + ex.side : ''}`;
+  const sets = ex.setsMin && ex.setsMin < ex.sets ? `${ex.setsMin}-${ex.sets}` : ex.sets;
+  return `${sets} × ${reps}${ex.unit === 'seg' ? ' s' : ''}${ex.side ? ' / ' + ex.side : ''}`;
 }
 function rirInfo(ex) {
   if (ex.rir) { const m = String(ex.rir).match(/(\d+)(?:\s*-\s*(\d+))?/); const lo = m ? +m[1] : 2; return {label:ex.rir, lo, hi:m && m[2] ? +m[2] : lo, general:false}; }
@@ -537,7 +669,7 @@ function entryLine(e) {
 const sessionsSorted = () => [...S.sessions].sort((a, b) => (b.date + (b.startedAt || 0)).localeCompare(a.date + (a.startedAt || 0)));
 function entriesFor(match) { // historial de entradas guardadas (todas las sesiones, todos los bloques)
   const out = [];
-  S.sessions.forEach(s => Object.values(s.entries || {}).forEach(e => { if (e.saved && match(e, s)) out.push({...e, date:s.date, sessionId:s.id, blockId:s.blockId, dayKey:s.dayKey}); }));
+  S.sessions.forEach(s => Object.values(s.entries || {}).forEach(e => { if (e.saved && match(e, s)) out.push({...e, date:s.date, sessionId:s.id, blockId:s.blockId, dayKey:s.dayKey, recoveryOf:s.recoveryOf || null}); }));
   return out.sort((a, b) => a.date.localeCompare(b.date) || (a.savedAt || 0) - (b.savedAt || 0));
 }
 function lastEntry(exId, excludeSessionId) {
@@ -548,22 +680,23 @@ function lastEntry(exId, excludeSessionId) {
 function suggest(ex, e) {
   if (!e) return null;
   const reps = (e.reps || []).slice(0, ex.sets).map(num);
-  const filled = reps.filter(r => r != null);
-  if (filled.length < ex.sets) return {lvl:'hold', icon:'pause', text:'Sesión incompleta: mantener carga y completar todas las series la próxima vez.'};
+  const filled = reps.filter(r => r != null); const T = PROFILE.progress;
+  if (filled.length < (ex.setsMin || ex.sets)) return {lvl:'hold', icon:'pause', text:'Sesión incompleta: mantener carga y completar todas las series la próxima vez.'};
   const lo = ex.repMin, hi = ex.repMax || ex.repMin;
   const R = rirInfo(ex);
-  if (filled.some(r => r < lo)) return {lvl:'down', icon:'down', text:'No llegaste al mínimo del rango en todas las series: mantené o reducí ligeramente la carga.'};
+  if (filled.some(r => r < lo)) return {lvl:'down', icon:'down', text:T ? T.down : 'No llegaste al mínimo del rango en todas las series: mantené o reducí ligeramente la carga.'};
   if (filled.every(r => r >= hi)) {
-    if (R.lo != null && e.rir != null && e.rir < R.lo) return {lvl:'hold', icon:'pause', text:'Completaste el rango, pero por debajo del RIR previsto. Mantené la carga y consolidá.'};
+    if (R.lo != null && e.rir != null && e.rir < R.lo) return {lvl:'hold', icon:'pause', text:(T ? T.hold + ' ' : '') + 'Completaste el rango, pero por debajo del RIR previsto: consolidá esta carga.'};
     let inc;
     if (ex.load === 'bodyweight') inc = 'Podrías hacerlo un poco más difícil' + (/remo invertido/i.test(ex.name) ? ': cuerpo algo más horizontal.' : ' (más rango, pausa o algo de lastre).');
     else if (ex.load === 'time') inc = 'Si te resultó fácil, podés sumar algo de tiempo o agregar 5-10 kg.';
     else if (ex.bigJump && e.rir != null && e.rir >= 4) inc = 'La carga quedó claramente liviana: en este ejercicio podés probar +5-10 kg.';
+    else if (T) inc = T.up;
     else inc = 'Podrías aumentar ligeramente el peso en la próxima sesión' + (ex.region === 'upper' ? ' (+1 a 2,5 kg).' : ex.region === 'lower' ? ' (+2,5 a 5 kg).' : '.');
-    const caveat = e.rir == null ? 'Solo si terminaste con buena técnica y ~1-2 reps en reserva.' : '';
+    const caveat = e.rir == null ? 'Solo si terminaste con buena técnica y dentro del RIR previsto.' : '';
     return {lvl:'up', icon:'up', text:inc, extra:caveat};
   }
-  return {lvl:'hold', icon:'pause', text:'Mantener carga. Seguí sumando repeticiones dentro del rango.'};
+  return {lvl:'hold', icon:'pause', text:T ? T.hold : 'Mantener carga. Seguí sumando repeticiones dentro del rango.'};
 }
 function inProgressSession() { return S.sessions.find(s => s.status === 'in_progress'); }
 function weekDone(refISO = todayISO()) { // qué días de esta semana tienen sesión o running
@@ -591,6 +724,30 @@ function saturdayRunStreak() { // sábados recientes reemplazados por running
     if (ran && !gym) count++;
   }
   return count;
+}
+const addDays = (iso, n) => isoOf(new Date(parseISO(iso).getTime() + n * 86400000));
+/* Estado de lunes a viernes: realizado / recuperado / no realizado / pendiente.
+   Un día pasado sin sesión cuenta como "no realizado" hasta que se marque otra cosa. */
+function weekStatus(refISO = todayISO()) {
+  const mon = mondayOf(refISO), sun = addDays(mon, 6), t = todayISO();
+  const marks = S.weekMarks[mon] || {};
+  return activeBlock().days.filter(d => d.weekday >= 1 && d.weekday <= 5).sort((a, b) => a.weekday - b.weekday).map(d => {
+    const date = addDays(mon, d.weekday - 1);
+    const sess = S.sessions.find(x => x.status === 'done' && x.dayKey === d.key && !x.recoveryOf && x.date >= mon && x.date <= sun);
+    const rec = S.sessions.find(x => x.status === 'done' && x.recoveryOf && x.recoveryOf.dayKey === d.key && x.recoveryOf.week === mon);
+    let st;
+    if (sess || marks[d.key] === 'done') st = 'done';
+    else if (rec) st = 'recovered';
+    else if (marks[d.key] === 'missed' || date < t) st = 'missed';
+    else st = 'pending';
+    return {day:d, date, st, mark:marks[d.key] || null, sess, rec, auto:st === 'missed' && !marks[d.key]};
+  });
+}
+const recoveryThisWeek = (refISO = todayISO()) => S.sessions.find(x => x.recoveryOf && x.recoveryOf.week === mondayOf(refISO));
+const ST_LABEL = {done:'Realizado', recovered:'Recuperado', missed:'No realizado', pending:'Pendiente'};
+function setWeekMark(dateISO, key, val) {
+  const mon = mondayOf(dateISO); S.weekMarks[mon] = S.weekMarks[mon] || {};
+  if (val) S.weekMarks[mon][key] = val; else delete S.weekMarks[mon][key];
 }
 const sortedMeas = () => [...S.measurements].sort((a, b) => a.date.localeCompare(b.date));
 
@@ -694,6 +851,8 @@ function go(path) {
   closeSheet(true); route();
 }
 function route() {
+  if (!S) return showChooser();
+  $('#nav').classList.remove('hide');
   const h = CUR;
   const [view, arg] = h.split('/');
   const map = {inicio:vHome, entrenar:vTrain, sesion:vSession, running:vRunning, progreso:vProgress, composicion:vBody, rutina:vRoutine, ajustes:vSettings};
@@ -703,9 +862,109 @@ function route() {
   $('#app').innerHTML = fn(arg);
   window.scrollTo(0, 0);
 }
-function rerender() { const y = window.scrollY; const h = CUR; const [view, arg] = h.split('/');
+function rerender() { if (!S) return showChooser(); const y = window.scrollY; const h = CUR; const [view, arg] = h.split('/');
   const map = {inicio:vHome, entrenar:vTrain, sesion:vSession, running:vRunning, progreso:vProgress, composicion:vBody, rutina:vRoutine, ajustes:vSettings};
   $('#app').innerHTML = (map[view] || vHome)(arg); window.scrollTo(0, y); }
+
+
+/* --- Elección de perfil --- */
+function vChooser() {
+  return `<div style="min-height:80vh;display:flex;flex-direction:column;justify-content:center">
+    <div class="topbar" style="margin-bottom:22px"><div><h1>¿Quién entrena?</h1><div class="sub">Cada perfil tiene su rutina y sus datos por separado en este dispositivo.</div></div></div>
+    <div class="stack">${Object.values(PROFILES).map(p => `<button class="daybtn" style="--c:${p.avatar};padding:20px" data-act="pick-profile" data-v="${p.id}">
+      <span class="sw" style="width:54px;height:54px;font-size:20px">${esc(p.name[0])}</span><span class="tx"><b style="font-size:21px">${esc(p.name)}</b></span><span class="chev">${ic('right')}</span></button>`).join('')}</div>
+    <p class="small muted" style="margin-top:16px;text-align:center">Podés cambiar de perfil después desde Ajustes.</p></div>`;
+}
+
+/* --- Sábado de recuperación (perfil Priscila) --- */
+function satPanel(onColor) {
+  const ws = weekStatus(); const rec = recoveryThisWeek(); const missed = ws.filter(x => x.st === 'missed');
+  const mon = mondayOf(todayISO()); const satMark = (S.weekMarks[mon] || {}).sat;
+  const B = onColor ? 'btn' : 'btn soft';
+  if (rec) {
+    const blk = blockById(rec.blockId) || activeBlock(); const d = dayOf(blk, rec.recoveryOf.dayKey) || {name:'', title:''};
+    const rest = missed.filter(x => x.day.key !== rec.recoveryOf.dayKey);
+    return {k:'Sábado', t:rec.status === 'done' ? `Recuperaste ${d.name.toLowerCase()}` : `Recuperando ${d.name.toLowerCase()}`, d:d.title,
+      body:`${rec.status !== 'done' ? `<a class="${B} block" style="margin-top:14px" href="#/sesion/${rec.id}">Continuar entrenamiento</a>` : ''}
+      ${rest.length ? `<p class="small" style="margin-top:12px;opacity:.9">${rest.map(x => esc(x.day.name)).join(', ')} ${rest.length > 1 ? 'quedan registrados' : 'queda registrado'} como no realizado${rest.length > 1 ? 's' : ''}. No hace falta compensar todo el volumen.</p>` : ''}`};
+  }
+  if (!missed.length) {
+    return {k:'Sábado', t:'Semana completada', d:satMark === 'rest' ? 'Elegiste descansar. ¡Bien ahí!' : 'Cardio opcional de 30-45 min o descanso.',
+      body:`<div class="grid2" style="margin-top:14px"><button class="${B}" style="margin:0" data-act="go-running">${ic('run', 18)} Cardio</button><button class="${B}" style="margin:0" data-act="sat-rest">${ic('moon', 18)} Descanso</button></div>`};
+  }
+  if (missed.length === 1) {
+    const x = missed[0];
+    return {k:'Sábado · recuperar entrenamiento', t:`Recuperar ${x.day.name}`, d:x.day.title,
+      body:`<button class="${B} block" style="margin-top:14px" data-act="recover" data-day="${x.day.key}" data-date="${x.date}">Recuperar ${esc(x.day.name.toLowerCase())} · ${esc(x.day.title)}</button>
+      <p class="small" style="margin-top:10px;opacity:.85">Se repite exactamente la sesión, con fecha de hoy. El cardio del sábado queda para cuando no haya pendientes.</p>`};
+  }
+  return {k:'Sábado · recuperar entrenamiento', t:'Elegí qué entrenamiento recuperar', d:`Tenés ${missed.length} pendientes: recuperá solo uno.`,
+    body:`<div class="stack" style="margin-top:14px">${missed.map(x => `<button class="${B} block" style="margin:0;justify-content:flex-start" data-act="recover" data-day="${x.day.key}" data-date="${x.date}">${esc(x.day.name)} · ${esc(x.day.title)}</button>`).join('')}</div>
+    <p class="small" style="margin-top:10px;opacity:.85">Los demás quedan registrados como no realizados. No se suman dos rutinas el mismo día.</p>`};
+}
+function satHero() { const p = satPanel(true); return `<div class="hero" style="--c:var(--primary)"><div class="k">${esc(p.k)}</div><div class="t">${esc(p.t)}</div><div class="d">${esc(p.d)}</div>${p.body}</div>`; }
+function satCard() { const p = satPanel(false); return `<div class="card" style="--c:var(--primary)"><div class="small muted" style="font-weight:700">${esc(p.k)}</div><b style="font-size:19px;display:block;margin-top:2px">${esc(p.t)}</b><div class="muted" style="font-size:14.5px">${esc(p.d)}</div>${p.body}</div>`; }
+function showSatSheet() { const p = satPanel(false); openSheet(p.t, `<p class="muted" style="margin-bottom:4px">${esc(p.d)}</p>${p.body}`); }
+
+function showDayStatus(key) {
+  const x = weekStatus().find(w => w.day.key === key); if (!x) return;
+  const d = x.day;
+  const stColor = {done:'var(--ok)', recovered:'var(--ok)', missed:'var(--down)', pending:'var(--mut)'}[x.st];
+  openSheet(`${d.name} · ${d.title}`, `<p style="font-size:15.5px"><span class="pill c" style="--c:${stColor}">${ST_LABEL[x.st]}</span>${x.auto ? ' <span class="small muted">· sin registrar</span>' : ''}</p>
+    <p class="small muted" style="margin-top:8px">${fmtLong(x.date)}${x.rec ? ` · recuperado el ${fmtDate(x.rec.date)}` : ''}</p>
+    <div class="stack" style="margin-top:16px">
+      ${x.sess ? `<button class="btn block ghost" data-act="session-view" data-id="${x.sess.id}">${ic('hist', 18)} Ver sesión registrada</button>` : ''}
+      ${x.st !== 'done' ? `<button class="btn block" style="background:${d.color}" data-act="start" data-day="${d.key}">Entrenar ${esc(d.name.toLowerCase())} ahora</button>` : ''}
+      ${!x.sess && x.mark !== 'done' ? `<button class="btn block soft" style="--c:var(--ok)" data-act="mark-day" data-day="${d.key}" data-date="${x.date}" data-v="done">${ic('check', 18)} Marcar como realizado</button>` : ''}
+      ${!x.sess && x.mark !== 'missed' && x.st !== 'recovered' ? `<button class="btn block danger" data-act="mark-day" data-day="${d.key}" data-date="${x.date}" data-v="missed">${ic('x', 18)} Marcar como no realizado</button>` : ''}
+      ${x.mark ? `<button class="linkbtn" style="align-self:center" data-act="mark-day" data-day="${d.key}" data-date="${x.date}" data-v="">Quitar marca</button>` : ''}
+    </div>
+    <p class="small muted" style="margin-top:12px">“Marcar como realizado” sirve si entrenaste pero no cargaste los datos. Los días pasados sin registro cuentan como no realizados.</p>`);
+}
+
+/* Cardio posterior a la sesión (martes y jueves en el perfil de Priscila) */
+function cardioBlock(s) {
+  if (!PROFILE.cardioAfter[s.dayKey]) return '';
+  const c = s.cardio || {}; const col = DAY_COLORS.run;
+  return `<div class="section-title">Cardio <small>después de la sesión</small></div>
+  <div class="ex" style="--c:${col}"><div class="ex-in">
+    <div class="ex-h"><div><div class="ex-n">20-30 min moderado</div></div>${c.minutes ? `<span class="tick">${ic('check')}</span>` : ''}</div>
+    <div class="tip">${ic('info', 17)}<div>${esc(PROFILE.cardioAfterText)}</div></div>
+    <div class="grid2" style="margin-top:12px">
+      <div><div class="lbl"><span>Minutos</span></div><label class="numin"><input inputmode="numeric" data-cfield="minutes" value="${c.minutes ?? ''}" placeholder="0" aria-label="Minutos de cardio"><span>min</span></label></div>
+      <div class="field"><div class="lbl"><span>Actividad</span></div><select data-cfield="activity" style="min-height:54px">${['', ...PROFILE.activities].map(a => `<option value="${esc(a)}" ${c.activity === a ? 'selected' : ''}>${a ? esc(a) : 'Elegir…'}</option>`).join('')}</select></div>
+    </div>
+    <div class="lbl" style="margin-top:12px"><span>Notas</span></div>
+    <textarea data-cfield="notes" placeholder="Inclinación, velocidad, sensaciones…">${esc(c.notes || '')}</textarea>
+    <p class="small muted" style="margin-top:6px">Se guarda solo mientras escribís.</p>
+  </div></div>`;
+}
+function warmupBlock() {
+  if (!PROFILE.warmup) return '';
+  return `<details class="acc card" open style="margin:0 0 10px;padding:4px 16px 12px;border-top:1px solid var(--line)"><summary><span class="sl">${ic('clock', 18)} Calentamiento general</span><span class="chev">${ic('chev', 18)}</span></summary>
+    <div class="acc-body"><ul>${PROFILE.warmup.map(t => `<li>${esc(t)}</li>`).join('')}</ul></div></details>`;
+}
+const recLabel = s => s && s.recoveryOf ? `Recuperación del ${(dayOf(blockById(s.blockId) || activeBlock(), s.recoveryOf.dayKey) || {name:''}).name.toLowerCase()}` : '';
+
+function guideHTMLPriscila() {
+  return `<div class="stack guide" style="margin-top:12px">
+  <div class="card"><h4>Qué significa RIR</h4><p>${PROFILE.rirText}</p></div>
+  <div class="card"><h4>Pesos iniciales</h4><p>Todos los pesos indicados son <b>orientativos</b>. No tenés que usar necesariamente ese número: durante las primeras sesiones se calibra la carga con técnica, rango de movimiento, repeticiones y RIR.</p></div>
+  <div class="banner warn">${ic('gear')}<div><b>Máquinas.</b> Especialmente en máquinas, los kilos no son comparables entre gimnasios: el mismo número puede sentirse muy distinto.</div></div>
+  <div class="card"><h4>Progresión</h4><p>Se mantienen los mismos ejercicios durante unas 6 semanas. No se cambian semanalmente: progresan las cargas, las repeticiones y la ejecución.</p>
+    <p class="muted" style="margin:8px 0">Ejemplo con 3 × 8-10:</p><div class="stack">
+    <div class="progrow" style="--c:var(--ok)"><b>10 / 10 / 10</b><span>Con buena técnica y el RIR previsto → podés aumentar ligeramente la carga en la próxima sesión.</span></div>
+    <div class="progrow" style="--c:var(--hold)"><b>10 / 9 / 8</b><span>Mantener carga.</span></div>
+    <div class="progrow" style="--c:var(--down)"><b>&lt; 8</b><span>Revisar carga o mantener hasta consolidar el rango.</span></div></div>
+    <p style="margin-top:8px">La app nunca modifica los pesos automáticamente: solo sugiere.</p></div>
+  <div class="card"><h4>Calentamiento general</h4><ul>${PROFILE.warmup.map(t => `<li>${esc(t)}</li>`).join('')}</ul></div>
+  <div class="card"><h4>Recuperar un día el sábado</h4><ul>
+    <li>Cada entrenamiento de lunes a viernes queda como realizado o no realizado.</li>
+    <li>Si faltó uno, el sábado aparece “Recuperar” con esa misma sesión, guardada con fecha del sábado.</li>
+    <li>Si faltaron dos o más, se elige uno solo; los demás quedan como no realizados. No se compensa todo el volumen.</li>
+    <li>Si no faltó ninguno: semana completada, con cardio opcional o descanso.</li></ul></div>
+  </div>`;
+}
 
 /* --- Inicio --- */
 function vHome() {
@@ -717,10 +976,12 @@ function vHome() {
     const cls = goodDir === 0 ? 'neu' : (d * goodDir > 0 ? 'good' : 'bad');
     return `<div class="dl ${cls}">${d > 0 ? '+' : ''}${fmtN(d)} kg vs. anterior</div>`;
   };
-  let hero;
+  let hero; const isRec = PROFILE.saturday === 'recover';
   if (ip) {
     const day = dayOf(blockById(ip.blockId) || b, ip.dayKey) || {};
-    hero = `<div class="hero" style="--c:${day.color || 'var(--primary)'}"><div class="k">Entrenamiento en curso</div><div class="t">${esc(day.name || '')}</div><div class="d">${esc(day.title || '')}</div><a class="btn block" href="#/sesion/${ip.id}">Continuar entrenamiento</a></div>`;
+    hero = `<div class="hero" style="--c:${day.color || 'var(--primary)'}"><div class="k">Entrenamiento en curso${ip.recoveryOf ? ' · ' + esc(recLabel(ip)) : ''}</div><div class="t">${esc(day.name || '')}</div><div class="d">${esc(day.title || '')}</div><a class="btn block" href="#/sesion/${ip.id}">Continuar entrenamiento</a></div>`;
+  } else if (isRec && todayWd === 6) {
+    hero = satHero();
   } else if (ns) {
     const day = dayOf(b, ns.dayKey);
     hero = `<div class="hero" style="--c:${day.color}"><div class="k">Próxima sesión · ${esc(ns.when)}</div><div class="t">${esc(day.name)}</div><div class="d">${esc(day.title)}</div>
@@ -732,20 +993,28 @@ function vHome() {
   const backupDays = S.lastBackupAt ? Math.floor((Date.now() - S.lastBackupAt) / 86400000) : null;
   const hasData = S.sessions.length + S.runs.length + S.measurements.length > 1;
   const backupWarn = hasData && (backupDays == null || backupDays > 14) ? `<a class="banner warn" style="margin-top:10px;text-decoration:none" href="#/ajustes">${ic('warn')}<div><b>${backupDays == null ? 'Todavía no exportaste ningún respaldo.' : `Último respaldo hace ${backupDays} días.`}</b> Tus datos viven solo en este navegador: exportá un respaldo.</div></a>` : '';
-  const sat = saturdayRunStreak();
+  const sat = isRec ? 0 : saturdayRunStreak();
   const satWarn = sat >= 3 ? `<div class="banner warn" style="margin-top:10px">${ic('warn')}<div>Reemplazaste ${sat} de los últimos 4 sábados por running. Conviene revisar la programación para no perder el segundo estímulo fuerte de glúteos.</div></div>` : '';
   return `
-  <div class="topbar"><div><h1>Mi rutina</h1><div class="sub">${esc(fmtLong(todayISO()))}</div></div></div>
+  <div class="topbar"><div><h1>Mi rutina</h1><div class="sub">${esc(PROFILE.name)} · ${esc(fmtLong(todayISO()))}</div></div></div>
   ${hero || ''}${todayLine}${backupWarn}${satWarn}
   <div class="section-title">Semana <small>${esc(b.name)}</small></div>
-  <div class="week">${SCHEDULE.map((sc, i) => [i, sc]).slice(1).concat([[0, SCHEDULE[0]]]).map(([i, sc]) => {
-    const color = sc.day ? DAY_COLORS[sc.day] : '';
+  <div class="week">${(() => { const ws = isRec ? weekStatus() : []; return SCHEDULE.map((sc, i) => [i, sc]).slice(1).concat([[0, SCHEDULE[0]]]).map(([i, sc]) => {
+    const color = sc.day ? DAY_COLORS[sc.day] : sc.type === 'sat' ? 'var(--primary)' : '';
+    if (isRec && (sc.type === 'gym' || sc.type === 'sat')) {
+      const w = ws.find(x => x.day.key === sc.day);
+      const st = sc.type === 'sat' ? (recoveryThisWeek()?.status === 'done' || (S.weekMarks[mondayOf(todayISO())] || {}).sat ? 'done' : 'pending') : (w ? w.st : 'pending');
+      const icn = {done:ic('check', 14), recovered:ic('hist', 14), missed:ic('x', 14), pending:sc.type === 'sat' ? ic('hist', 14) : ic('train', 14)}[st];
+      const act = sc.type === 'sat' ? 'data-act="sat-sheet"' : st === 'pending' ? `data-act="start" data-day="${sc.day}"` : `data-act="day-status" data-day="${sc.day}"`;
+      return `<button class="wd gym ${i === todayWd ? 'today' : ''} ${st === 'done' || st === 'recovered' ? 'done' : ''} ${st === 'missed' ? 'missed' : ''}" ${act} style="--c:${color}" aria-label="${WD[i]}: ${esc(sc.label)}, ${ST_LABEL[st]}"><b>${WD3[i]}</b><span class="dot">${icn}</span><span class="act">${esc(sc.label)}</span></button>`;
+    }
     const isDone = done.has(i);
     const icn = isDone ? ic('check', 14) : sc.type === 'gym' ? ic('train', 14) : sc.type === 'box' ? ic('glove', 14) : ic('moon', 14);
     const tag = sc.type === 'gym' ? 'button' : 'div';
     const act = sc.type !== 'gym' ? '' : sc.day === 'sab' ? 'data-act="sat-choice"' : `data-act="start" data-day="${sc.day}"`;
     return `<${tag} class="wd ${sc.type === 'gym' ? 'gym' : ''} ${i === todayWd ? 'today' : ''} ${isDone ? 'done' : ''}" ${sc.type === 'gym' ? `${act} style="--c:${color}" aria-label="Entrenar ${WD[i].toLowerCase()}"` : ''}><b>${WD3[i]}</b><span class="dot">${icn}</span><span class="act">${esc(sc.label)}</span></${tag}>`;
-  }).join('')}</div>
+  }).join(''); })()}</div>
+  ${isRec ? `<p class="small muted" style="margin-top:6px">Tocá un día pasado para marcarlo como realizado o no realizado.</p>` : ''}
   <div class="card" style="margin-top:12px"><div class="row" style="justify-content:space-between"><div><b style="font-size:17px">${esc(b.name)}</b><div class="small muted">Desde ${fmtDate(b.startDate)} · ${b.weeks} semanas</div></div><b style="font-size:17px">Semana ${Math.min(wk, b.weeks)} de ${b.weeks}</b></div>
     <div class="blockbar" style="margin-top:10px"><div class="progress"><i style="width:${Math.min(100, wk / b.weeks * 100)}%"></i></div></div>
     ${wk > b.weeks ? `<div class="banner info" style="margin-top:10px">${ic('flag')}<div><b>Bloque cumplido</b> (semana ${wk}). Cuando quieras, creá el siguiente desde Rutina. El historial no se borra.</div></div>` : ''}
@@ -762,8 +1031,10 @@ function vHome() {
 /* --- Entrenar --- */
 function vTrain() {
   const b = activeBlock(); const ip = inProgressSession(); const twd = new Date().getDay();
+  const isRec = PROFILE.saturday === 'recover'; const ws = isRec ? weekStatus() : [];
+  const stPill = d => { const w = ws.find(x => x.day.key === d.key); if (!w || w.st === 'pending') return ''; const c = w.st === 'missed' ? 'var(--down)' : 'var(--ok)'; return ` <span class="pill c" style="--c:${c};font-size:11.5px;padding:2px 7px">${ST_LABEL[w.st]}</span>`; };
   const dayBtn = d => `<button class="daybtn ${SCHEDULE[twd].day === d.key ? 'today' : ''}" style="--c:${d.color}" data-act="start" data-day="${d.key}">
-      <span class="sw">${d.name.slice(0, 3)}</span><span class="tx"><b>Entrenar ${esc(d.name.toLowerCase())}</b><span>${esc(d.title)} · ${d.exercises.length} ejercicios</span></span><span class="chev">${ic('right')}</span></button>`;
+      <span class="sw">${d.name.slice(0, 3)}</span><span class="tx"><b>Entrenar ${esc(d.name.toLowerCase())}${stPill(d)}</b><span>${esc(d.title)} · ${d.exercises.length} ejercicios</span></span><span class="chev">${ic('right')}</span></button>`;
   const sab = dayOf(b, 'sab');
   const others = b.days.filter(d => d.key !== 'sab');
   return `
@@ -771,6 +1042,8 @@ function vTrain() {
   ${ip ? `<a class="banner info" style="text-decoration:none;margin-bottom:12px" href="#/sesion/${ip.id}">${ic('clock')}<div><b>Tenés un entrenamiento en curso.</b> Tocá para continuarlo.</div></a>` : ''}
   <div class="stack">
     ${others.map(dayBtn).join('')}
+    ${isRec ? satCard() : ''}
+    ${isRec ? `<a class="daybtn" style="--c:${DAY_COLORS.run}" href="#/running"><span class="sw">${ic('run')}</span><span class="tx"><b>Cardio</b><span>Registrar cardio suelto (sábado u otro día)</span></span><span class="chev">${ic('right')}</span></a>` : ''}
     ${sab ? `<div class="card" style="padding:14px"><div class="row" style="justify-content:space-between;margin-bottom:10px"><b style="font-size:18px">Sábado</b><span class="small muted">Elegí una opción</span></div>
       <div class="sat-choice">
         <button class="daybtn ${twd === 6 ? 'today' : ''}" style="--c:${sab.color};flex-direction:column;align-items:flex-start;gap:10px" data-act="start" data-day="sab"><span class="sw">${ic('train')}</span><span class="tx"><b>Glúteos + isquios</b><span>+ abdomen</span></span></button>
@@ -786,10 +1059,10 @@ function recentList(n) {
     .sort((a, b) => b.d.localeCompare(a.d)).slice(0, n);
   if (!items.length) return `<div class="empty"><b>Todavía no hay registros</b>Cuando finalices un entrenamiento aparece acá.</div>`;
   return `<div class="stack">${items.map(it => {
-    if (it.t === 'r') return `<button class="listrow" style="--c:${DAY_COLORS.run}" data-act="run-edit" data-id="${it.r.id}"><span class="bar"></span><span class="mid"><b>Running</b><span>${fmtDate(it.r.date)} · ${it.r.duration ? it.r.duration + ' min' : ''}${it.r.distance ? ' · ' + fmtN(it.r.distance) + ' km' : ''}</span></span>${ic('right')}</button>`;
+    if (it.t === 'r') return `<button class="listrow" style="--c:${DAY_COLORS.run}" data-act="run-edit" data-id="${it.r.id}"><span class="bar"></span><span class="mid"><b>${esc(it.r.activity || PROFILE.cardioLabel)}</b><span>${fmtDate(it.r.date)} · ${it.r.duration ? it.r.duration + ' min' : ''}${it.r.distance ? ' · ' + fmtN(it.r.distance) + ' km' : ''}</span></span>${ic('right')}</button>`;
     const blk = blockById(it.s.blockId) || activeBlock(); const day = dayOf(blk, it.s.dayKey) || {name:it.s.dayKey, color:'#888'};
     const n = Object.values(it.s.entries).filter(e => e.saved).length;
-    return `<button class="listrow" style="--c:${day.color}" data-act="session-view" data-id="${it.s.id}"><span class="bar"></span><span class="mid"><b>${esc(day.name)}</b><span>${fmtDate(it.s.date)} · ${n} ejercicios · ${esc(blk.name)}</span></span>${ic('right')}</button>`;
+    return `<button class="listrow" style="--c:${day.color}" data-act="session-view" data-id="${it.s.id}"><span class="bar"></span><span class="mid"><b>${esc(day.name)}${it.s.recoveryOf ? ' <span class="small muted">· recuperación</span>' : ''}</b><span>${fmtDate(it.s.date)} · ${n} ejercicios · ${esc(blk.name)}</span></span>${ic('right')}</button>`;
   }).join('')}</div>`;
 }
 
@@ -805,6 +1078,7 @@ function vSession(id) {
   return `
   <a class="back" href="#/entrenar">${ic('left', 18)} Entrenar</a>
   <div class="sess-head" style="--c:${day.color}">
+    ${s.recoveryOf ? `<div style="display:inline-block;background:rgba(255,255,255,.2);border-radius:999px;padding:3px 10px;font-size:12.5px;font-weight:700;margin-bottom:6px">${esc(recLabel(s))} · ${fmtDate(s.recoveryOf.date)}</div>` : ''}
     <div class="t">${esc(day.name)}</div><div class="d">${esc(day.title)}</div>
     <div class="row"><input type="date" value="${s.date}" data-sfield="date" aria-label="Fecha de la sesión"><span style="font-weight:700">${savedN} / ${exs.length} guardados</span></div>
     ${s.status !== 'done' ? `<button class="btn sm" style="background:rgba(255,255,255,.18);color:#fff;margin-top:10px;width:100%" data-act="finish" data-id="${s.id}">${ic('flag', 17)} Finalizar entrenamiento</button>` : ''}
@@ -812,8 +1086,11 @@ function vSession(id) {
   </div>
   ${s.status === 'done' ? `<div class="banner info" style="margin-bottom:10px">${ic('info')}<div>Sesión finalizada el ${fmtDate(s.date)}. Podés corregir datos; se guardan al tocar “Guardar ejercicio”.</div></div>` : ''}
   ${day.intro ? `<div class="banner info" style="--c:${day.color};margin-bottom:10px">${ic('info')}<div>${esc(day.intro)}</div></div>` : ''}
+  ${warmupBlock()}
+  <div style="text-align:right;margin:-2px 0 6px"><button class="linkbtn" data-act="rir-info">${ic('info', 16)} ¿Qué es el RIR?</button></div>
   <div class="stack">${g.main.map(ex => card(ex, ++idx)).join('')}</div>
   ${g.core.length ? `<div class="grouphead" style="--c:${day.color}">Abdomen / core</div><div class="stack" style="margin-top:8px">${g.core.map(ex => card(ex, 'A' + (g.core.indexOf(ex) + 1))).join('')}</div>` : ''}
+  ${cardioBlock(s)}
   <div class="section-title">Notas de la sesión</div>
   <textarea data-sfield="notes" placeholder="Cómo te sentiste, energía, molestias…">${esc(s.notes || '')}</textarea>
   <div class="sticky-finish stack">
@@ -848,8 +1125,8 @@ function sessionCard(s, ex, pos, color) {
     <div class="log" data-ex="${ex.id}">
       <div class="lbl"><span>${wLabel}</span>${last?.weight != null ? `<button class="linkbtn" data-act="same-weight" data-ex="${ex.id}" data-w="${last.weight}">Usar ${fmtN(last.weight)} kg</button>` : ''}</div>
       <div class="wrow"><label class="numin"><input inputmode="decimal" data-efield="weight" value="${e.weight ?? ''}" placeholder="${last?.weight != null ? fmtN(last.weight) : '0'}" aria-label="${wLabel} en kg"><span>kg</span></label></div>
-      <div class="lbl" style="margin-top:12px"><span>Repeticiones${ex.unit === 'seg' ? ' (segundos)' : ''}${ex.side ? ' por ' + ex.side : ''}</span><span>${n} series</span></div>
-      <div class="sets" style="--n:${Math.min(n, 5)}">${Array.from({length:n}, (_, i) => `<label class="set"><div class="sn">S${i + 1}</div><input inputmode="numeric" data-efield="rep" data-i="${i}" value="${e.reps?.[i] ?? ''}" placeholder="${lastReps[i] ?? '–'}" aria-label="Serie ${i + 1} ${unitLbl}"></label>`).join('')}</div>
+      <div class="lbl" style="margin-top:12px"><span>Repeticiones${ex.unit === 'seg' ? ' (segundos)' : ''}${ex.side ? ' por ' + ex.side : ''}</span><span>${ex.setsMin && ex.setsMin < n ? `${ex.setsMin}-${n} series` : `${n} series`}</span></div>
+      <div class="sets" style="--n:${Math.min(n, 5)}">${Array.from({length:n}, (_, i) => `<label class="set"><div class="sn">S${i + 1}${ex.setsMin && i >= ex.setsMin ? ' · opc.' : ''}</div><input inputmode="numeric" data-efield="rep" data-i="${i}" value="${e.reps?.[i] ?? ''}" placeholder="${lastReps[i] ?? '–'}" aria-label="Serie ${i + 1} ${unitLbl}"></label>`).join('')}</div>
       <div class="lbl" style="margin-top:12px"><span>RIR final${R.label ? ' · objetivo ' + esc(R.label) : ''}</span></div>
       <div class="rir" role="group" aria-label="RIR final">${[0, 1, 2, 3, 4].map(v => `<button type="button" class="${e.rir === v ? 'on' : ''}" data-act="rir" data-ex="${ex.id}" data-v="${v}">${v === 4 ? '4+' : v}</button>`).join('')}</div>
       <div class="lbl" style="margin-top:12px"><span>Notas</span></div>
@@ -864,12 +1141,13 @@ function vRunning() {
   const b = activeBlock(); const r = b.running; const runs = [...S.runs].sort((a, c) => c.date.localeCompare(a.date));
   const sat = saturdayRunStreak();
   return `<a class="back" href="#/entrenar">${ic('left', 18)} Entrenar</a>
-  <div class="sess-head" style="--c:${DAY_COLORS.run}"><div class="t">Running</div><div class="d">Sábado alternativo: reemplaza por completo la sesión de gimnasio.</div></div>
+  <div class="sess-head" style="--c:${DAY_COLORS.run}"><div class="t">${esc(PROFILE.cardioLabel)}</div><div class="d">${PROFILE.saturday === 'recover' ? 'Complemento del entrenamiento de fuerza.' : 'Sábado alternativo: reemplaza por completo la sesión de gimnasio.'}</div></div>
+  ${PROFILE.saturday === 'recover' && weekStatus().some(x => x.st === 'missed') && !recoveryThisWeek() ? `<div class="banner warn" style="margin-bottom:10px">${ic('warn')}<div><b>Tenés entrenamientos pendientes esta semana.</b> El cardio del sábado es solo si no hay ninguno pendiente: priorizá recuperar.</div></div>` : ''}
   ${runningGuide(r)}
   ${sat >= 3 ? `<div class="banner warn" style="margin-top:10px">${ic('warn')}<div>Reemplazaste ${sat} de los últimos 4 sábados por running. Conviene revisar la programación del gimnasio.</div></div>` : ''}
-  <button class="btn block" style="margin-top:14px;background:${DAY_COLORS.run}" data-act="run-new">${ic('plus')} Registrar running</button>
+  <button class="btn block" style="margin-top:14px;background:${DAY_COLORS.run}" data-act="run-new">${ic('plus')} Registrar ${esc(PROFILE.cardioLabel.toLowerCase())}</button>
   <div class="section-title">Historial</div>
-  ${runs.length ? `<div class="stack">${runs.map(x => `<button class="listrow" style="--c:${DAY_COLORS.run}" data-act="run-edit" data-id="${x.id}"><span class="bar"></span><span class="mid"><b>${fmtDate(x.date)} · ${x.duration ? x.duration + ' min' : '—'}${x.distance ? ' · ' + fmtN(x.distance) + ' km' : ''}</b><span>${esc(runPace(x) || '')}${x.notes ? ' · ' + esc(x.notes) : ''}</span></span>${ic('edit', 18)}</button>`).join('')}</div>` : `<div class="empty"><b>Sin salidas registradas</b>Registrá fecha, duración, distancia y sensaciones.</div>`}`;
+  ${runs.length ? `<div class="stack">${runs.map(x => `<button class="listrow" style="--c:${DAY_COLORS.run}" data-act="run-edit" data-id="${x.id}"><span class="bar"></span><span class="mid"><b>${fmtDate(x.date)} · ${x.activity ? esc(x.activity) + ' · ' : ''}${x.duration ? x.duration + ' min' : '—'}${x.distance ? ' · ' + fmtN(x.distance) + ' km' : ''}</b><span>${esc(runPace(x) || '')}${x.notes ? ' · ' + esc(x.notes) : ''}</span></span>${ic('edit', 18)}</button>`).join('')}</div>` : `<div class="empty"><b>Sin registros todavía</b>Registrá fecha, duración${PROFILE.activities ? ', actividad' : ', distancia'} y sensaciones.</div>`}`;
 }
 function runPace(x) {
   if (x.pace) return 'Ritmo ' + x.pace + ' /km';
@@ -877,12 +1155,12 @@ function runPace(x) {
   return '';
 }
 function runningGuide(r) {
-  const c = DAY_COLORS.run;
+  const c = DAY_COLORS.run; const T = r.titles || ['Entrada en calor', 'Carrera', 'Opcional al final'];
   return `<div class="card" style="--c:${c}"><div class="steps">
-    <div class="step"><span class="n">1</span><div><b>Entrada en calor</b>${r.warmup.map(t => `<span>${esc(t)}</span>`).join('')}</div></div>
-    <div class="step"><span class="n">2</span><div><b>Carrera</b>${r.main.map(t => `<span>${esc(t)}</span>`).join('')}</div></div>
-    <div class="step"><span class="n">3</span><div><b>Opcional al final</b>${r.optional.map(t => `<span>${esc(t)}</span>`).join('')}</div></div>
-  </div>${r.notes.map((t, i) => `<div class="banner ${i === 0 ? 'info' : 'warn'}" style="--c:${c};margin-top:8px">${ic(i === 0 ? 'info' : 'warn')}<div>${esc(t)}</div></div>`).join('')}</div>`;
+    <div class="step"><span class="n">1</span><div><b>${esc(T[0])}</b>${r.warmup.map(t => `<span>${esc(t)}</span>`).join('')}</div></div>
+    <div class="step"><span class="n">2</span><div><b>${esc(T[1])}</b>${r.main.map(t => `<span>${esc(t)}</span>`).join('')}</div></div>
+    <div class="step"><span class="n">3</span><div><b>${esc(T[2])}</b>${r.optional.map(t => `<span>${esc(t)}</span>`).join('')}</div></div>
+  </div>${r.notes.map((t, i) => `<div class="banner ${i === 0 || r.titles ? 'info' : 'warn'}" style="--c:${c};margin-top:8px">${ic(i === 0 ? 'info' : 'warn')}<div>${esc(t)}</div></div>`).join('')}</div>`;
 }
 
 /* --- Progreso --- */
@@ -919,9 +1197,9 @@ function vProgress() {
 function recentListFiltered(ss, rs) {
   const items = [...ss.map(s => ({t:'s', d:s.date, s})), ...rs.map(r => ({t:'r', d:r.date, r}))].sort((a, b) => b.d.localeCompare(a.d));
   return `<div class="stack">${items.map(it => {
-    if (it.t === 'r') return `<button class="listrow" style="--c:${DAY_COLORS.run}" data-act="run-edit" data-id="${it.r.id}"><span class="bar"></span><span class="mid"><b>Running</b><span>${fmtDate(it.r.date)}${it.r.duration ? ' · ' + it.r.duration + ' min' : ''}${it.r.distance ? ' · ' + fmtN(it.r.distance) + ' km' : ''}</span></span>${ic('right')}</button>`;
+    if (it.t === 'r') return `<button class="listrow" style="--c:${DAY_COLORS.run}" data-act="run-edit" data-id="${it.r.id}"><span class="bar"></span><span class="mid"><b>${esc(it.r.activity || PROFILE.cardioLabel)}</b><span>${fmtDate(it.r.date)}${it.r.duration ? ' · ' + it.r.duration + ' min' : ''}${it.r.distance ? ' · ' + fmtN(it.r.distance) + ' km' : ''}</span></span>${ic('right')}</button>`;
     const blk = blockById(it.s.blockId) || activeBlock(); const day = dayOf(blk, it.s.dayKey) || {name:it.s.dayKey, color:'#888'};
-    return `<button class="listrow" style="--c:${day.color}" data-act="session-view" data-id="${it.s.id}"><span class="bar"></span><span class="mid"><b>${esc(day.name)}</b><span>${fmtDate(it.s.date)} · ${Object.values(it.s.entries).filter(e => e.saved).length} ejercicios · ${esc(blk.name)}</span></span>${ic('right')}</button>`;
+    return `<button class="listrow" style="--c:${day.color}" data-act="session-view" data-id="${it.s.id}"><span class="bar"></span><span class="mid"><b>${esc(day.name)}${it.s.recoveryOf ? ' <span class="small muted">· recuperación</span>' : ''}</b><span>${fmtDate(it.s.date)} · ${Object.values(it.s.entries).filter(e => e.saved).length} ejercicios · ${esc(blk.name)}</span></span>${ic('right')}</button>`;
   }).join('')}</div>`;
 }
 function showHistory(exId) {
@@ -934,9 +1212,16 @@ function showHistory(exId) {
   const first = withW[0], last = withW[withW.length - 1];
   let trend = '';
   if (first && last && withW.length > 1) { const d = last.weight - first.weight; trend = `<div class="trend"><span class="pill">Primera: ${fmtN(first.weight)} kg</span><span class="pill">Última: ${fmtN(last.weight)} kg</span><span class="pill c" style="--c:${d >= 0 ? 'var(--ok)' : 'var(--down)'}">${d >= 0 ? '+' : ''}${fmtN(d)} kg</span></div>`; }
+  const sumReps = e => (e.reps || []).reduce((a, r) => a + (num(r) || 0), 0);
+  list.forEach((e, i) => { e.__prev = list[i - 1] || null; });
+  const cmp = e => { const p = e.__prev; if (!p) return ''; const parts = [];
+    if (e.weight != null && p.weight != null) { const dw = e.weight - p.weight; parts.push(Math.abs(dw) < .01 ? 'mismo peso' : `${dw > 0 ? '+' : ''}${fmtN(dw)} kg`); }
+    const dr = sumReps(e) - sumReps(p); parts.push(dr === 0 ? 'mismas reps totales' : `${dr > 0 ? '+' : ''}${dr} reps totales`);
+    const up = (e.weight ?? 0) > (p.weight ?? 0) || ((e.weight ?? 0) === (p.weight ?? 0) && dr > 0);
+    return `<div class="n" style="color:${up ? 'var(--ok)' : 'var(--mut)'};font-weight:650">vs. anterior: ${parts.join(' · ')}</div>`; };
   const row = e => { const blk = blockById(e.blockId); const day = blk ? dayOf(blk, e.dayKey) : null;
-    return `<div class="hrow"><div class="top"><b>${fmtDate(e.date)}</b><span class="small muted">${esc(day?.name || '')}${blk ? ' · ' + esc(blk.name) : ''}</span></div>
-      <div class="reps">${e.weight != null ? fmtN(e.weight) + ' kg' : 'Sin carga'}<small>${esc(entryReps(e))}${e.rir != null ? ' · RIR ' + rirTxt(e.rir) : ''}</small></div>${e.notes ? `<div class="n">${esc(e.notes)}</div>` : ''}</div>`; };
+    return `<div class="hrow"><div class="top"><b>${fmtDate(e.date)}</b><span class="small muted">${esc(day?.name || '')}${e.recoveryOf ? ' · recuperación' : ''}${blk ? ' · ' + esc(blk.name) : ''}</span></div>
+      <div class="reps">${e.weight != null ? fmtN(e.weight) + ' kg' : 'Sin carga'}<small>${esc(entryReps(e))}${e.rir != null ? ' · RIR ' + rirTxt(e.rir) : ''}</small></div>${cmp(e)}${e.notes ? `<div class="n">${esc(e.notes)}</div>` : ''}</div>`; };
   const body = `${ex ? `<p class="small muted" style="margin-bottom:8px">Objetivo actual: ${esc(targetStr(ex))}${rirInfo(ex).label ? ' · RIR ' + esc(rirInfo(ex).label) : ''}</p>` : ''}
     <div class="card" style="padding:10px 8px 6px">${lineChart(list.map(e => ({x:e.date, y:e.weight})), {color, unit:'kg'})}</div>
     ${trend}
@@ -952,9 +1237,10 @@ function showSessionDetail(id) {
   const items = day.exercises.filter(ex => s.entries[ex.id]?.saved).map(ex => ({ex, e:s.entries[ex.id]}));
   // entradas de ejercicios que ya no están en la rutina (editada) se muestran igual
   const extra = Object.values(s.entries).filter(e => e.saved && !day.exercises.some(x => x.id === e.exId));
-  openSheet(`${day.name} · ${fmtDate(s.date)}`, `<p class="small muted" style="margin-bottom:10px">${esc(blk.name)} · ${esc(day.title)}</p>
+  openSheet(`${day.name} · ${fmtDate(s.date)}`, `<p class="small muted" style="margin-bottom:10px">${esc(blk.name)} · ${esc(day.title)}${s.recoveryOf ? ` · <b>${esc(recLabel(s))} (${fmtDate(s.recoveryOf.date)})</b>` : ''}</p>
     <div class="hist">${items.map(({e}) => `<div class="hrow"><div class="top"><b>${esc(e.name)}</b></div><div class="reps">${e.weight != null ? fmtN(e.weight) + ' kg' : 'Sin carga'}<small>${esc(entryReps(e))}${e.rir != null ? ' · RIR ' + rirTxt(e.rir) : ''}</small></div>${e.notes ? `<div class="n">${esc(e.notes)}</div>` : ''}</div>`).join('')}
     ${extra.map(e => `<div class="hrow"><div class="top"><b>${esc(e.name)}</b><span class="small muted">ya no está en la rutina</span></div><div class="reps">${e.weight != null ? fmtN(e.weight) + ' kg' : 'Sin carga'}<small>${esc(entryReps(e))}</small></div></div>`).join('')}</div>
+    ${s.cardio && s.cardio.minutes ? `<div class="note" style="margin-top:10px">${ic('run', 17)}<div><b>Cardio:</b> ${esc(s.cardio.minutes)} min${s.cardio.activity ? ' · ' + esc(s.cardio.activity) : ''}${s.cardio.notes ? ' · ' + esc(s.cardio.notes) : ''}</div></div>` : ''}
     ${s.notes ? `<div class="note" style="margin-top:10px">${ic('info', 17)}<div>${esc(s.notes)}</div></div>` : ''}
     <div class="stack" style="margin-top:14px"><a class="btn block ghost" href="#/sesion/${s.id}" data-act="sheet-close">${ic('edit', 18)} Corregir esta sesión</a></div>`);
 }
@@ -1159,11 +1445,12 @@ async function importAnthropometryPdf(file) {
 function vRoutine() {
   const viewId = UI.routineBlock || S.activeBlockId; const b = blockById(viewId) || activeBlock(); const isActive = b.id === S.activeBlockId;
   if (!isActive) UI.editing = false;
-  const tabs = [['dias', 'Días'], ['running', 'Running'], ['guia', 'Guía'], ['futuro', 'Objetivos futuros']];
+  const tabs = [['dias', 'Días'], ['running', PROFILE.cardioLabel], ['guia', 'Guía']].concat(PROFILE.future ? [['futuro', 'Objetivos futuros']] : []);
+  if (!tabs.some(t => t[0] === UI.routineTab)) UI.routineTab = 'dias';
   let body = '';
   if (UI.routineTab === 'dias') body = b.days.map(d => routineDay(b, d, isActive)).join('');
-  if (UI.routineTab === 'running') body = (UI.editing ? `<button class="btn block soft" style="margin-bottom:10px" data-act="run-plan-edit">${ic('edit', 18)} Editar indicaciones de running</button>` : '') + runningGuide(b.running);
-  if (UI.routineTab === 'guia') body = guideHTML();
+  if (UI.routineTab === 'running') body = (UI.editing ? `<button class="btn block soft" style="margin-bottom:10px" data-act="run-plan-edit">${ic('edit', 18)} Editar indicaciones de ${esc(PROFILE.cardioLabel.toLowerCase())}</button>` : '') + runningGuide(b.running);
+  if (UI.routineTab === 'guia') body = PROFILE.id === 'priscila' ? guideHTMLPriscila() : guideHTML();
   if (UI.routineTab === 'futuro') body = futureHTML();
   return `<div class="topbar"><div><h1>Rutina</h1><div class="sub">${esc(b.name)} · ${isActive ? 'bloque actual' : 'bloque cerrado, solo lectura'}</div></div></div>
   <div class="blockchips">${S.blocks.map(x => `<button class="${x.id === b.id ? 'on' : ''}" data-act="routine-block" data-v="${x.id}">${esc(x.name)}<small>${x.id === S.activeBlockId ? 'actual' : 'cerrado'}</small></button>`).join('')}</div>
@@ -1256,8 +1543,11 @@ function futureHTML() {
 /* --- Ajustes --- */
 function vSettings() {
   const modeTxt = {indexeddb:'IndexedDB (con copia espejo en localStorage)', localstorage:'localStorage', memory:'Memoria temporal: los datos se pierden al cerrar'}[Store.mode];
-  const counts = `${S.sessions.filter(s => s.status === 'done').length} entrenamientos · ${S.runs.length} running · ${S.measurements.length} mediciones · ${S.blocks.length} bloque${S.blocks.length === 1 ? '' : 's'}`;
-  return `<div class="topbar"><div><h1>Ajustes</h1><div class="sub">Datos y respaldo</div></div></div>
+  const counts = `${S.sessions.filter(s => s.status === 'done').length} entrenamientos · ${S.runs.length} ${esc(PROFILE.cardioLabel.toLowerCase())} · ${S.measurements.length} mediciones · ${S.blocks.length} bloque${S.blocks.length === 1 ? '' : 's'}`;
+  return `<div class="topbar"><div><h1>Ajustes</h1><div class="sub">Perfil, datos y respaldo</div></div></div>
+  <div class="card" style="margin-bottom:10px"><div class="row" style="justify-content:space-between"><div><span class="small muted" style="font-weight:700">Perfil activo</span><b style="display:block;font-size:19px">${esc(PROFILE.name)}</b></div>
+    <button class="btn sm ghost" data-act="switch-profile">Cambiar</button></div>
+    <p class="small muted" style="margin-top:10px">Los datos de cada perfil quedan guardados por separado en este dispositivo. No es una contraseña: cualquiera que use este dispositivo puede cambiar de perfil.</p></div>
   ${Store.mode === 'memory' ? `<div class="banner warn">${ic('warn')}<div><b>Este navegador no permite guardar datos.</b> Exportá un respaldo antes de cerrar.</div></div>` : ''}
   <div class="card"><b>Respaldo</b><p class="small muted" style="margin:4px 0 12px">${counts}<br>Último respaldo: ${S.lastBackupAt ? new Date(S.lastBackupAt).toLocaleDateString('es-AR') : 'nunca'}</p>
     <div class="stack"><button class="btn block" data-act="export">${ic('dl')} Exportar respaldo</button>
@@ -1266,19 +1556,20 @@ function vSettings() {
   <div class="card" style="margin-top:10px"><b>Almacenamiento</b><p class="small muted" style="margin-top:4px">${esc(modeTxt)}</p>
     <button class="btn sm ghost block" style="margin-top:10px" data-act="persist">Pedir almacenamiento persistente</button>
     <p class="small muted" style="margin-top:8px">Los datos viven solo en este navegador y en este dispositivo. En iPhone, agregá la app a la pantalla de inicio y exportá respaldos con frecuencia.</p></div>
-  <div class="card" style="margin-top:10px"><b>Zona sensible</b><p class="small muted" style="margin:4px 0 10px">Borra todo y vuelve a la rutina original. No se puede deshacer.</p>
-    <button class="btn sm danger block" data-act="reset">${ic('trash', 17)} Borrar todos los datos</button></div>`;
+  <div class="card" style="margin-top:10px"><b>Zona sensible</b><p class="small muted" style="margin:4px 0 10px">Borra los datos de este perfil y vuelve a su rutina original. El otro perfil no se toca. No se puede deshacer.</p>
+    <button class="btn sm danger block" data-act="reset">${ic('trash', 17)} Borrar datos de ${esc(PROFILE.name)}</button></div>`;
 }
 
 /* ---------- 8. Acciones ---------- */
-function startSession(dayKey) {
+function startSession(dayKey, recoveryOf = null) {
   const ip = inProgressSession();
   if (ip) {
-    if (ip.dayKey === dayKey) { go('#/sesion/' + ip.id); return; }
+    if (ip.dayKey === dayKey && !!ip.recoveryOf === !!recoveryOf) { go('#/sesion/' + ip.id); return; }
     confirmSheet('Hay un entrenamiento en curso', 'Tenés otro entrenamiento sin finalizar. Abrilo para finalizarlo o descartarlo antes de empezar uno nuevo.', 'Abrir el que está en curso').then(ok => { if (ok) go('#/sesion/' + ip.id); });
     return;
   }
   const s = {id:uid('s'), blockId:S.activeBlockId, dayKey, type:'gym', date:todayISO(), status:'in_progress', startedAt:Date.now(), finishedAt:null, entries:{}, notes:''};
+  if (recoveryOf) s.recoveryOf = recoveryOf;
   S.sessions.push(s); persist(true); go('#/sesion/' + s.id);
 }
 const curSession = () => { const h = CUR.match(/^sesion\/(.+)/); return h ? S.sessions.find(s => s.id === h[1]) : null; };
@@ -1318,9 +1609,9 @@ function readExForm(form) {
 }
 
 async function exportBackup() {
-  const payload = {app:'mi-rutina', schema:1, exportedAt:new Date().toISOString(), data:S};
+  const payload = {app:'mi-rutina', schema:1, profile:PID, exportedAt:new Date().toISOString(), data:S};
   const json = JSON.stringify(payload, null, 2);
-  const name = `mi-rutina-respaldo-${todayISO()}.json`;
+  const name = `mi-rutina-${PID}-respaldo-${todayISO()}.json`;
   const blob = new Blob([json], {type:'application/json'});
   const file = typeof File === 'function' ? new File([blob], name, {type:'application/json'}) : null;
   const markDone = () => { S.lastBackupAt = Date.now(); persist(true); rerender(); toast('Respaldo exportado'); };
@@ -1345,6 +1636,8 @@ async function importBackup(file) {
   try { payload = JSON.parse(await file.text()); } catch (e) { toast('El archivo no es un JSON válido.'); return; }
   const data = payload && payload.data ? payload.data : payload;
   if (!data || !Array.isArray(data.blocks) || !Array.isArray(data.sessions)) { toast('El archivo no parece un respaldo de esta app.'); return; }
+  const owner = payload.profile || data.profile;
+  if (owner && owner !== PID && PROFILES[owner]) { toast(`Este respaldo es de ${PROFILES[owner].name}. Cambiá a ese perfil en Ajustes para importarlo.`); return; }
   const c = `${(data.sessions || []).filter(s => s.status === 'done').length} entrenamientos, ${(data.runs || []).length} salidas de running, ${(data.measurements || []).length} mediciones y ${data.blocks.length} bloque(s)`;
   const when = payload.exportedAt ? ` exportado el ${new Date(payload.exportedAt).toLocaleDateString('es-AR')}` : '';
   const ok = await confirmSheet('Importar respaldo', `El respaldo${when} contiene ${c}.<br><br><b>Va a reemplazar todos los datos actuales de esta app.</b> Si querés conservarlos, exportá primero un respaldo de lo actual.`, 'Reemplazar con el respaldo', true);
@@ -1363,6 +1656,18 @@ document.addEventListener('click', async e => {
     case 'sheet-close': closeSheet(); break;
     case 'start': startSession(d.day); break;
     case 'go-running': go('#/running'); break;
+    case 'pick-profile': await activateProfile(d.v); break;
+    case 'switch-profile': if (inProgressSession()) { toast('Finalizá o descartá el entrenamiento en curso antes de cambiar de perfil.'); break; }
+      if (await confirmSheet('Cambiar de perfil', `Vas a salir del perfil de <b>${esc(PROFILE.name)}</b>. Sus datos quedan guardados en este dispositivo.`, 'Cambiar de perfil')) { await persist(true); try { localStorage.removeItem('mi-rutina-perfil'); } catch (e) {} S = null; PID = null; UI.routineBlock = null; UI.editing = false; showChooser(); } break;
+    case 'rir-info': openSheet('¿Qué es el RIR?', `<p style="font-size:15.5px;line-height:1.5">${PROFILE.rirText}</p>`); break;
+    case 'sat-sheet': showSatSheet(); break;
+    case 'day-status': showDayStatus(d.day); break;
+    case 'mark-day': setWeekMark(d.date, d.day, d.v || null); await persist(true); closeSheet(); rerender(); toast(d.v === 'done' ? 'Marcado como realizado' : d.v === 'missed' ? 'Marcado como no realizado' : 'Marca quitada'); break;
+    case 'sat-rest': { const mon = mondayOf(todayISO()); S.weekMarks[mon] = S.weekMarks[mon] || {}; S.weekMarks[mon].sat = 'rest'; await persist(true); closeSheet(); rerender(); toast('Descanso. ¡Semana completada!'); break; }
+    case 'recover': { const mon = mondayOf(todayISO()); closeSheet(true);
+      if (recoveryThisWeek() && recoveryThisWeek().status === 'done') { toast('Ya recuperaste un entrenamiento esta semana.'); break; }
+      const ip = inProgressSession(); if (ip && ip.recoveryOf && ip.recoveryOf.dayKey === d.day) { go('#/sesion/' + ip.id); break; }
+      startSession(d.day, {dayKey:d.day, week:mon, date:d.date}); break; }
     case 'sat-choice': { const sab = dayOf(activeBlock(), 'sab');
       openSheet('Sábado', `<p class="muted" style="margin-bottom:12px">Elegí una opción.</p><div class="stack">
         <button class="daybtn" style="--c:${sab.color}" data-act="start" data-day="sab"><span class="sw">${ic('train')}</span><span class="tx"><b>Glúteos + isquios</b><span>${esc(sab.title)} · ${sab.exercises.length} ejercicios</span></span><span class="chev">${ic('right')}</span></button>
@@ -1386,19 +1691,20 @@ document.addEventListener('click', async e => {
     // Running
     case 'run-new': case 'run-edit': {
       const r = a === 'run-edit' ? S.runs.find(x => x.id === d.id) : {date:todayISO()};
-      openSheet(a === 'run-new' ? 'Registrar running' : 'Editar running', `<form class="form" id="runform" data-id="${r.id || ''}">
+      openSheet((a === 'run-new' ? 'Registrar ' : 'Editar ') + PROFILE.cardioLabel.toLowerCase(), `<form class="form" id="runform" data-id="${r.id || ''}">
         <div class="field"><label for="r-date">Fecha</label><input id="r-date" type="date" name="date" value="${r.date}"></div>
+        ${PROFILE.activities ? `<div class="field"><label for="r-act">Actividad</label><select id="r-act" name="activity">${PROFILE.activities.map(a => `<option ${r.activity === a ? 'selected' : ''}>${esc(a)}</option>`).join('')}</select></div>` : ''}
         <div class="grid2"><div class="field"><label for="r-dur">Duración (min)</label><input id="r-dur" name="duration" inputmode="decimal" value="${r.duration ?? ''}"></div><div class="field"><label for="r-dist">Distancia (km)</label><input id="r-dist" name="distance" inputmode="decimal" value="${r.distance ?? ''}"></div></div>
         <div class="field"><label for="r-pace">Ritmo promedio (opcional)</label><input id="r-pace" name="pace" placeholder="ej. 6:45" value="${esc(r.pace || '')}"><span class="hint">Si lo dejás vacío se calcula con duración y distancia.</span></div>
         <div class="field"><label for="r-notes">Sensación / notas</label><textarea id="r-notes" name="notes">${esc(r.notes || '')}</textarea></div>
-        <button type="button" class="btn block" style="background:${DAY_COLORS.run}" data-act="run-save">${ic('check')} Guardar running</button>
+        <button type="button" class="btn block" style="background:${DAY_COLORS.run}" data-act="run-save">${ic('check')} Guardar</button>
         ${r.id ? `<button type="button" class="btn block danger" data-act="run-del" data-id="${r.id}">${ic('trash', 18)} Eliminar</button>` : ''}</form>`);
       break; }
     case 'run-save': { const f = $('#runform'); const fd = new FormData(f); const id = f.dataset.id;
-      const o = {date:fd.get('date') || todayISO(), duration:num(fd.get('duration')), distance:num(fd.get('distance')), pace:(fd.get('pace') || '').trim(), notes:(fd.get('notes') || '').trim()};
+      const o = {date:fd.get('date') || todayISO(), activity:(fd.get('activity') || '').toString(), duration:num(fd.get('duration')), distance:num(fd.get('distance')), pace:(fd.get('pace') || '').trim(), notes:(fd.get('notes') || '').trim()};
       if (!o.duration && !o.distance) { toast('Cargá al menos duración o distancia.'); break; }
       if (id) Object.assign(S.runs.find(x => x.id === id), o); else S.runs.push({id:uid('r'), blockId:S.activeBlockId, ...o});
-      await persist(true); closeSheet(); rerender(); toast('Running guardado'); break; }
+      await persist(true); closeSheet(); rerender(); toast('Guardado'); break; }
     case 'run-del': if (await confirmSheet('Eliminar running', 'Se borra este registro de running.', 'Eliminar', true)) { S.runs = S.runs.filter(x => x.id !== d.id); await persist(true); rerender(); } break;
     // Mediciones
     case 'meas-new': openSheet('Nueva medición', measForm()); break;
@@ -1434,7 +1740,8 @@ document.addEventListener('click', async e => {
       openSheet('Editar ' + day.name.toLowerCase(), `<form class="form" id="dayform" data-day="${day.key}"><div class="field"><label for="d-t">Enfoque del día</label><input id="d-t" name="title" value="${esc(day.title)}"></div><div class="field"><label for="d-i">Indicación general (opcional)</label><textarea id="d-i" name="intro">${esc(day.intro)}</textarea></div><button type="button" class="btn block" data-act="day-save">${ic('check')} Guardar</button></form>`); break; }
     case 'day-save': { const f = $('#dayform'); const day = dayOf(activeBlock(), f.dataset.day); const fd = new FormData(f); day.title = fd.get('title').trim() || day.title; day.intro = fd.get('intro').trim(); await persist(true); closeSheet(); rerender(); break; }
     case 'run-plan-edit': { const r = activeBlock().running; const ta = (k, l) => `<div class="field"><label for="rp-${k}">${l}</label><textarea id="rp-${k}" name="${k}" rows="3">${esc(r[k].join('\n'))}</textarea></div>`;
-      openSheet('Indicaciones de running', `<form class="form" id="rpform">${ta('warmup', 'Entrada en calor')}${ta('main', 'Carrera')}${ta('optional', 'Opcional al final')}${ta('notes', 'Salvedades')}<span class="hint">Una indicación por línea.</span><button type="button" class="btn block" data-act="run-plan-save">${ic('check')} Guardar</button></form>`); break; }
+      const T = r.titles || ['Entrada en calor', 'Carrera', 'Opcional al final'];
+      openSheet('Indicaciones de ' + PROFILE.cardioLabel.toLowerCase(), `<form class="form" id="rpform">${ta('warmup', T[0])}${ta('main', T[1])}${ta('optional', T[2])}${ta('notes', 'Salvedades')}<span class="hint">Una indicación por línea.</span><button type="button" class="btn block" data-act="run-plan-save">${ic('check')} Guardar</button></form>`); break; }
     case 'run-plan-save': { const fd = new FormData($('#rpform')); const r = activeBlock().running; ['warmup', 'main', 'optional', 'notes'].forEach(k => r[k] = lines(fd.get(k))); await persist(true); closeSheet(); rerender(); break; }
     case 'block-edit': { const b = activeBlock();
       openSheet('Datos del bloque', `<form class="form" id="blockform"><div class="field"><label for="b-n">Nombre</label><input id="b-n" name="name" value="${esc(b.name)}"></div><div class="grid2"><div class="field"><label for="b-w">Duración (semanas)</label><input id="b-w" name="weeks" inputmode="numeric" value="${b.weeks}"></div><div class="field"><label for="b-s">Inicio</label><input id="b-s" type="date" name="startDate" value="${b.startDate}"></div></div><span class="hint">La semana actual se calcula desde la fecha de inicio.</span><button type="button" class="btn block" data-act="block-save">${ic('check')} Guardar</button></form>`); break; }
@@ -1454,13 +1761,15 @@ document.addEventListener('click', async e => {
     // Ajustes
     case 'export': exportBackup(); break;
     case 'persist': if (navigator.storage?.persist) { const ok = await navigator.storage.persist(); toast(ok ? 'Almacenamiento persistente activado' : 'El navegador no lo concedió. Seguí exportando respaldos.'); } else toast('Este navegador no ofrece esa opción.'); break;
-    case 'reset': if (await confirmSheet('Borrar todos los datos', 'Se borran entrenamientos, mediciones, bloques y cambios de rutina. <b>No se puede deshacer.</b> Exportá un respaldo antes si lo necesitás.', 'Borrar todo', true)) { S = defaultState(); await persist(true); UI.routineBlock = null; toast('Datos borrados'); go('#/inicio'); } break;
+    case 'reset': if (await confirmSheet('Borrar todos los datos', `Se borran entrenamientos, mediciones, bloques y cambios de rutina del perfil de ${esc(PROFILE.name)}. <b>No se puede deshacer.</b> Exportá un respaldo antes si lo necesitás.`, 'Borrar todo', true)) { S = defaultState(); await persist(true); UI.routineBlock = null; toast('Datos borrados'); go('#/inicio'); } break;
   }
 });
 
 // Entrada de datos en la sesión: se guarda como borrador al escribir (no se pierde si se bloquea el celular)
 document.addEventListener('input', e => {
+  if (!S) return;
   const t = e.target; const s = curSession(); if (!s) return;
+  if (t.dataset.cfield) { s.cardio = s.cardio || {}; s.cardio[t.dataset.cfield] = t.dataset.cfield === 'minutes' ? num(t.value) : t.value; persist(); return; }
   if (t.dataset.sfield) { if (t.dataset.sfield === 'date' && !t.value) return; s[t.dataset.sfield] = t.value; persist(); return; }
   const log = t.closest('.log'); if (!log || !t.dataset.efield) return;
   const ex = exOfSession(s, log.dataset.ex); const en = ensureEntry(s, ex);
@@ -1477,12 +1786,21 @@ document.addEventListener('visibilitychange', () => { if (document.visibilitySta
 window.addEventListener('popstate', () => { try { CUR = location.hash.replace(/^#\/?/, '') || 'inicio'; } catch (e) {} closeSheet(true); route(); });
 
 /* ---------- 9. Arranque ---------- */
+function showChooser() { $('#nav').classList.add('hide'); closeSheet(true); $('#app').innerHTML = vChooser(); window.scrollTo(0, 0); }
+async function activateProfile(pid, keepRoute = false) {
+  if (!PROFILES[pid]) return showChooser();
+  setProfile(pid);
+  const data = await Store.load();
+  const migrated = !!(data && data.__migrated);
+  S = normalize(data || defaultState());
+  if (!data || migrated) await persist(true); // guarda (o migra) bajo la clave del perfil
+  go(keepRoute ? CUR : '#/inicio');
+  if (migrated) toast('Tus datos anteriores quedaron en este perfil.');
+}
 (async function boot() {
   await Store.init();
-  const data = await Store.load();
-  S = normalize(data || defaultState());
-  if (!data) await persist(true);
-  route();
+  let pid = null; try { pid = localStorage.getItem('mi-rutina-perfil'); } catch (e) {}
+  if (pid && PROFILES[pid]) await activateProfile(pid, true); else showChooser();
 })();
 </script>
 </body>
