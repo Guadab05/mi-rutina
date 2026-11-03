@@ -369,7 +369,7 @@ const MACHINE_WARN = 'Peso de máquina: no es comparable entre máquinas distint
 function E(o) { // normaliza un ejercicio con valores por defecto
   return Object.assign({id: uid('ex'), name:'', sub:'', section:'main', sets:3, repMin:8, repMax:10, unit:'reps', side:'',
     weight:'', rir:'', kind:'isolation', region:'lower', load:'external', machine:false, optional:false, bigJump:false,
-    tag:'', tech:[], warn:[], note:''}, o);
+    tag:'', tech:[], warn:[], note:'', howto:[]}, o);
 }
 
 function seedDaysGuada() {
@@ -970,6 +970,90 @@ function guideHTMLPriscila() {
   </div>`;
 }
 
+
+/* ---------- Cómo se hace cada ejercicio ----------
+   Se busca por nombre, así funciona también con ejercicios editados o nuevos.
+   Si un ejercicio tiene pasos propios (campo howto), se usan esos. */
+const HOWTO = {
+  hipthrust:{w:'Glúteos (principal) e isquiotibiales.', s:['Sentate en el piso con la parte alta de la espalda (justo debajo de los omóplatos) apoyada en el borde de un banco.','Apoyá la barra sobre la cadera con una almohadilla. Pies apoyados al ancho de los hombros y rodillas flexionadas.','Empujá con los talones y subí la cadera hasta que el torso quede paralelo al piso y las rodillas formen un ángulo recto.','Arriba, apretá los glúteos un segundo con el mentón levemente hacia el pecho.','Bajá controlado, sin apoyar del todo la cola en el piso. Si hay máquina de hip thrust, la idea es la misma.'], q:'hip thrust con barra técnica'},
+  hack:{w:'Cuádriceps y glúteos.', s:['Es una máquina con respaldo inclinado y almohadillas para los hombros.','Apoyá la espalda y la cadera en el respaldo, con los hombros debajo de las almohadillas.','Pies en la plataforma al ancho de la cadera. Destrabá los seguros.','Bajá flexionando las rodillas hasta donde puedas mantener la espalda apoyada (idealmente muslos paralelos a la plataforma o más).','Subí empujando con todo el pie, sin trabar las rodillas arriba. Si no hay hack, la alternativa es la sentadilla con barra sobre los trapecios.'], q:'hack squat máquina técnica'},
+  bulgara:{w:'Glúteos y cuádriceps.', s:['Parate de espaldas a un banco y apoyá el empeine de un pie atrás, sobre el banco.','Adelantá el otro pie: un paso largo carga más el glúteo; uno corto, más el cuádriceps.','Con una mancuerna en cada mano, inclinate apenas hacia adelante.','Bajá flexionando la rodilla de adelante hasta que el muslo quede casi paralelo al piso. La rodilla de atrás va hacia el piso.','Subí empujando con el talón de la pierna de adelante. Hacé todas las repeticiones y recién ahí cambiá de pierna.'], q:'sentadilla búlgara glúteo técnica'},
+  bulgara_smith:{w:'Glúteos y cuádriceps.', s:['Poné un banco detrás de la máquina Smith y apoyá la barra sobre los trapecios.','Apoyá el empeine de un pie atrás, sobre el banco, y adelantá el otro pie.','Destrabá la barra y bajá flexionando la rodilla de adelante, en línea recta, hasta que el muslo quede casi paralelo al piso.','Subí empujando con la pierna de adelante, sin apoyarte en la de atrás.','Hacé todas las repeticiones con una pierna y después cambiá.'], q:'sentadilla búlgara en smith técnica'},
+  prensa:{w:'Cuádriceps y glúteos.', s:['Sentate con la espalda y la cola bien apoyadas en el respaldo.','Pies en el centro de la plataforma, al ancho de los hombros.','Destrabá los seguros y bajá la plataforma flexionando las rodillas hasta unos 90°, o hasta donde puedas sin despegar la cola.','Empujá con todo el pie para subir, sin trabar las rodillas arriba.'], q:'prensa de piernas técnica'},
+  prensa_altos:{w:'Glúteos e isquiotibiales (más que la prensa común).', s:['Sentate con la espalda y la cola bien apoyadas.','Apoyá los pies más arriba en la plataforma que en la prensa común, al ancho de los hombros.','Destrabá y bajá flexionando rodillas y cadera, sin que la cola se despegue del respaldo.','Empujá con los talones para subir, sin trabar las rodillas.'], q:'prensa pies altos glúteos técnica'},
+  gemelos_prensa:{w:'Pantorrillas (gemelos).', s:['Sentate en la prensa y apoyá solo la parte delantera de los pies (debajo de los dedos) en el borde inferior de la plataforma, con los talones afuera.','Extendé las piernas sin trabar las rodillas.','Empujá con las puntas de los pies, estirando los tobillos al máximo.','Volvé dejando que los talones bajen bien para estirar. Cuidá que los pies no se resbalen.'], q:'gemelos en prensa técnica'},
+  ext_cuad:{w:'Cuádriceps (frente del muslo).', s:['Sentate con la espalda apoyada y la rodilla alineada con el eje de giro de la máquina.','El rodillo va sobre la parte baja de la canilla, arriba del tobillo.','Estirá las piernas hasta casi extenderlas del todo y apretá un segundo.','Bajá lento.'], q:'extensión de cuádriceps máquina técnica'},
+  curl_fem:{w:'Isquiotibiales (parte de atrás del muslo).', s:['Según la máquina, se hace acostada boca abajo o sentada.','Las rodillas quedan alineadas con el eje de giro y el rodillo, sobre la parte de atrás de los tobillos.','Flexioná las rodillas llevando los talones hacia la cola, sin levantar la cadera.','Volvé lento hasta casi estirar.'], q:'curl femoral máquina técnica'},
+  curl_fem_acostada:{w:'Isquiotibiales (parte de atrás del muslo).', s:['Acostate boca abajo en la máquina, con las rodillas justo pasando el borde del banco.','El rodillo va sobre la parte de atrás de los tobillos. Agarrate de las manijas.','Flexioná las rodillas llevando los talones hacia la cola, sin despegar la cadera del banco.','Volvé lento hasta casi estirar.'], q:'curl femoral acostado técnica'},
+  curl_fem_sentada:{w:'Isquiotibiales (parte de atrás del muslo).', s:['Sentate con la espalda apoyada, la rodilla alineada con el eje y el rodillo de arriba trabando el muslo.','Apoyá la parte de atrás del tobillo de una pierna sobre el rodillo de abajo.','Flexioná la rodilla llevando el talón hacia abajo y atrás.','Volvé lento. Hacé todas las repeticiones y cambiá de pierna.'], q:'curl femoral sentado unilateral técnica'},
+  abduccion:{w:'Glúteo medio (costado de la cola). Abducción = alejar la pierna del centro del cuerpo.', s:['En la máquina: sentate con la espalda apoyada y las almohadillas del lado de afuera de las rodillas.','Abrí las piernas hacia los costados empujando con la parte externa de las rodillas.','Pausá un segundo con las piernas abiertas.','Cerrá lento, sin que las placas choquen.','En polea: tobillera en la polea baja, parada de costado, y llevás la pierna más lejana hacia afuera.'], q:'abducción de cadera máquina técnica'},
+  aduccion:{w:'Aductores (parte interna del muslo). Aducción = acercar la pierna al centro del cuerpo.', s:['Sentate con la espalda apoyada y las almohadillas del lado de adentro de las rodillas.','Arrancás con las piernas abiertas.','Cerrá las piernas apretando hacia el centro.','Abrí lento hasta la posición inicial.'], q:'aducción de cadera máquina técnica'},
+  elev_piernas:{w:'Abdomen, sobre todo la parte baja.', s:['En silla romana: antebrazos apoyados, espalda contra el respaldo y el cuerpo colgando.','Subí las piernas (rectas o apenas flexionadas) hasta unos 90°.','Al subir, enrollá la pelvis hacia adelante: la cola se despega un poco del respaldo.','Bajá controlado, sin balancearte.','En paralelas es igual, pero sosteniéndote con los brazos extendidos.'], q:'elevación de piernas silla romana técnica'},
+  elev_rodillas:{w:'Abdomen.', s:['Colgada de una barra, o en silla romana con los antebrazos apoyados.','Llevá las rodillas flexionadas hacia el pecho.','Arriba, enrollá la pelvis hacia adelante.','Bajá controlado, sin balancearte.'], q:'elevación de rodillas colgado técnica'},
+  situp:{w:'Abdomen.', s:['Sentate en el banco declinado con los pies trabados debajo de los rodillos.','Sostené un disco contra el pecho con los brazos cruzados.','Bajá controlado hasta casi apoyar la espalda.','Subí enrollando el tronco hasta quedar sentada. No tironees del cuello.'], q:'sit up banco declinado con peso técnica'},
+  jalon:{w:'Dorsales (espalda) y bíceps.', s:['Sentate con los muslos trabados debajo de los rodillos.','Agarrá la barra o las manijas con los brazos estirados. En agarre neutro, las palmas se miran entre sí.','Sacá pecho e inclinate apenas hacia atrás.','Tirá llevando los codos hacia abajo y atrás hasta que las manos lleguen a la parte alta del pecho.','Subí lento, estirando los brazos.'], q:'jalón al pecho agarre neutro técnica'},
+  remo_sentado:{w:'Espalda media y dorsales.', s:['Sentate con el pecho apoyado en el respaldo, o con los pies en la plataforma si es en polea.','Agarrá las manijas con los brazos estirados y la espalda recta.','Tirá llevando los codos hacia atrás, pegados al cuerpo, y juntá los omóplatos.','Volvé lento estirando los brazos, sin encorvarte.'], q:'remo sentado polea técnica'},
+  remo_barra:{w:'Espalda media y dorsales.', s:['Con barra: inclinate desde la cadera a unos 45°, espalda recta y rodillas apenas flexionadas.','Dejá la barra colgando con los brazos estirados.','Tirá la barra hacia el ombligo llevando los codos hacia atrás.','Bajá lento. Si es en polea, se hace como el remo sentado.'], q:'remo con barra técnica'},
+  remo_brazo:{w:'Dorsales y espalda media.', s:['Apoyá una mano y la rodilla del mismo lado en un banco, con la espalda paralela al piso.','Con la otra mano sostené la mancuerna, con el brazo estirado.','Tirá llevando el codo hacia atrás y arriba, en dirección a la cadera.','Bajá estirando el brazo, sin girar el torso.'], q:'remo a un brazo con mancuerna técnica'},
+  remo_inv:{w:'Espalda y bíceps. Es la base para llegar a la dominada.', s:['Poné la barra de la Smith más o menos a la altura de la cintura, o usá un TRX.','Agarrate y caminá con los pies hacia adelante hasta quedar inclinada, con el cuerpo recto de la cabeza a los talones.','Tirá llevando el pecho hacia la barra y juntando los omóplatos.','Bajá lento. Cuanto más vertical estés, más fácil; cuanto más horizontal, más difícil.'], q:'remo invertido smith técnica'},
+  pullover:{w:'Dorsales.', s:['Parate frente a la polea alta con una barra recta o una cuerda y da un paso atrás.','Inclinate apenas hacia adelante, con los brazos casi extendidos arriba.','Bajá la barra en arco hasta los muslos, sin flexionar los codos: el movimiento sale del hombro.','Volvé en arco, lento.'], q:'pullover en polea brazos extendidos técnica'},
+  press_pecho:{w:'Pectorales, tríceps y la parte de adelante del hombro.', s:['Acostate en el banco plano con los pies firmes en el piso y los omóplatos juntos.','Sostené las mancuernas o la barra a la altura del pecho, con los codos a unos 45° del cuerpo.','Empujá hacia arriba sin trabar los codos.','Bajá controlado hasta el pecho. En máquina: sentada, con las manijas a la altura del pecho.'], q:'press de pecho con mancuernas técnica'},
+  press_inclinado:{w:'Parte alta del pecho, hombros y tríceps.', s:['Poné el banco inclinado a unos 30-45°.','Espalda apoyada, pies firmes y omóplatos juntos.','Empujá las mancuernas o la barra hacia arriba desde la parte alta del pecho.','Bajá controlado, con los codos a unos 45° del cuerpo.'], q:'press inclinado mancuernas técnica'},
+  militar:{w:'Hombros y tríceps.', s:['Sentada o parada, con las mancuernas o la barra a la altura de los hombros y las palmas hacia adelante.','Abdomen firme, sin arquear la espalda.','Empujá hacia arriba hasta casi estirar los brazos.','Bajá hasta la altura del mentón o de las orejas.'], q:'press militar mancuernas técnica'},
+  laterales:{w:'Hombros (parte lateral).', s:['Parada, con una mancuerna a cada costado y los codos apenas flexionados.','Subí los brazos hacia los costados hasta la altura de los hombros, no más, como si abrieras alas.','Bajá lento.','No te balancees para subir más peso.'], q:'elevaciones laterales mancuernas técnica'},
+  pajaros:{w:'Parte de atrás del hombro y espalda alta.', s:['Inclinate hacia adelante desde la cadera con la espalda recta, o sentada con el pecho sobre las piernas.','Dejá las mancuernas colgando debajo del pecho, con los codos apenas flexionados.','Abrí los brazos hacia los costados juntando los omóplatos.','Bajá lento. En máquina, sentate mirando al respaldo y abrí los brazos hacia atrás.'], q:'pájaros deltoides posterior técnica'},
+  facepull:{w:'Parte de atrás del hombro y espalda alta.', s:['Poné la polea a la altura de la cara, con una cuerda.','Agarrá la cuerda con las palmas hacia abajo y da un paso atrás.','Tirá hacia la cara separando las manos, con los codos altos, hasta que las manos queden a los costados de la cabeza.','Volvé lento.'], q:'face pull técnica'},
+  triceps_polea:{w:'Tríceps (parte de atrás del brazo).', s:['Parate frente a la polea alta con una barra o una cuerda.','Codos pegados al cuerpo.','Estirá los brazos hacia abajo moviendo solo los antebrazos.','Volvé hasta que los codos queden a unos 90°.'], q:'extensión de tríceps en polea técnica'},
+  triceps_overhead:{w:'Tríceps, sobre todo la porción larga.', s:['Poné la cuerda en la polea baja o media y parate de espaldas a la máquina.','Llevá la cuerda detrás de la cabeza, con los codos apuntando hacia arriba.','Estirá los brazos hacia arriba y adelante.','Volvé flexionando los codos, sin moverlos de lugar.'], q:'tríceps polea sobre la cabeza cuerda técnica'},
+  triceps_uni:{w:'Tríceps.', s:['Polea alta con manija simple, con un brazo.','Codo pegado al cuerpo.','Estirá el brazo hacia abajo.','Volvé lento. Hacé todas las repeticiones y cambiá de brazo.'], q:'tríceps unilateral polea técnica'},
+  curl:{w:'Bíceps.', s:['Parada, con una mancuerna a cada costado y las palmas hacia adelante.','Codos pegados al cuerpo.','Flexioná los codos subiendo las mancuernas hacia los hombros.','Bajá lento, sin balancearte.'], q:'curl de bíceps mancuernas técnica'},
+  curl_polea:{w:'Bíceps.', s:['Parate frente a la polea baja con una barra.','Codos pegados al cuerpo y palmas hacia arriba.','Subí la barra flexionando los codos.','Bajá lento.'], q:'curl de bíceps en polea técnica'},
+  martillo:{w:'Bíceps y antebrazo.', s:['Parada, con las mancuernas a los costados y las palmas mirando hacia el cuerpo, como sosteniendo un martillo.','Codos pegados.','Subí manteniendo esa posición de las manos todo el recorrido.','Bajá lento.'], q:'curl martillo técnica'},
+  frances:{w:'Tríceps.', s:['Acostate en un banco con la mancuerna sostenida arriba del pecho, con los brazos estirados.','Flexioná solo los codos, bajando la mancuerna hacia la frente o apenas detrás de la cabeza.','Los codos quedan quietos, apuntando al techo.','Estirá los brazos para volver.'], q:'press francés con mancuerna técnica'},
+  rdl:{w:'Glúteos e isquiotibiales.', s:['Parada, con la barra o las mancuernas delante de los muslos, pies al ancho de la cadera y rodillas apenas flexionadas.','Llevá la cadera hacia atrás, como si cerraras una puerta con la cola, bajando la barra pegada a las piernas.','Espalda recta todo el tiempo.','Bajá hasta sentir el estiramiento atrás de las piernas, más o menos debajo de las rodillas.','Subí empujando la cadera hacia adelante.'], q:'peso muerto rumano técnica'},
+  deadlift:{w:'Toda la parte de atrás: glúteos, isquios y espalda.', s:['Barra en el piso, sobre la mitad del pie, con los pies al ancho de la cadera.','Agachate flexionando cadera y rodillas y agarrá la barra justo por fuera de las piernas.','Pecho arriba, espalda recta y brazos estirados.','Empujá el piso con las piernas y subí la barra pegada al cuerpo hasta quedar parada.','Bajá por el mismo camino, llevando primero la cadera hacia atrás.'], q:'peso muerto convencional técnica'},
+  goodmorning:{w:'Isquiotibiales, glúteos y zona lumbar.', s:['Apoyá la barra sobre los trapecios, como en una sentadilla, con las rodillas apenas flexionadas.','Inclinate hacia adelante llevando la cadera hacia atrás, con la espalda recta.','Bajá hasta que el torso quede casi paralelo al piso, o hasta donde mantengas la espalda recta.','Volvé empujando la cadera hacia adelante.'], q:'buenos días con barra técnica'},
+  pallof:{w:'Core: estabilidad y antirrotación.', s:['Parate de costado a la polea, con la manija a la altura del pecho.','Agarrá la manija con las dos manos contra el pecho y alejate un paso.','Estirá los brazos al frente, resistiendo que la polea te gire.','Volvé al pecho. Hacé todas las repeticiones y cambiá de lado.'], q:'pallof press técnica'},
+  woodchopper:{w:'Core y oblicuos.', s:['Parate de costado a la polea alta y agarrá la manija con las dos manos.','Girá el torso llevando la manija en diagonal hacia abajo, hacia la cadera contraria, como si hacharas.','Pivotá el pie de atrás para acompañar el giro.','Volvé controlado y después cambiá de lado.'], q:'woodchopper polea técnica'},
+  plancha_lat:{w:'Oblicuos y core.', s:['Acostate de costado y apoyá el antebrazo justo debajo del hombro.','Piernas estiradas, con un pie sobre el otro.','Subí la cadera hasta formar una línea recta de la cabeza a los pies.','Sostené el tiempo indicado sin dejar caer la cadera y cambiá de lado.'], q:'plancha lateral técnica'},
+  zancada_atras:{w:'Glúteos y cuádriceps.', s:['Parada, con una mancuerna en cada mano.','Da un paso largo hacia atrás.','Bajá hasta que las dos rodillas queden a unos 90°, con la de atrás cerca del piso y el torso apenas inclinado.','Empujá con el talón del pie de adelante para volver a la posición inicial.'], q:'zancada hacia atrás mancuernas técnica'},
+  estocada_adelante:{w:'Cuádriceps y glúteos.', s:['Poné un step o un disco delante tuyo.','Da un paso hacia adelante apoyando el pie sobre el step.','Bajá hasta que la rodilla de atrás casi toque el piso.','Volvé empujando con el pie de adelante. Priorizá el equilibrio antes que el peso.'], q:'estocada pie delantero elevado técnica'},
+  stepup:{w:'Glúteos y cuádriceps.', s:['Poné un banco o cajón delante de la Smith y apoyá la barra sobre los trapecios.','Apoyá un pie completo sobre el banco.','Empujá con esa pierna hasta quedar parada arriba, sin impulsarte con la pierna de abajo.','Bajá lento con la misma pierna. Hacé todas las repeticiones y cambiá.'], q:'step up en smith técnica'},
+  patada:{w:'Glúteos.', s:['Poné la tobillera en la polea baja y parate frente a la máquina, agarrándote.','Arrancá con la pierna de trabajo cruzada levemente por delante de la de apoyo.','Llevala hacia atrás y hacia afuera en diagonal, apretando el glúteo.','Volvé controlado, sin girar el cuerpo. Hacé todas las repeticiones y cambiá de pierna.'], q:'patada de glúteo en polea cruzada técnica'},
+  goblet:{w:'Cuádriceps y glúteos.', s:['Sostené una mancuerna o pesa rusa contra el pecho.','Apoyá los talones sobre un disco, con los pies al ancho de los hombros.','Bajá en sentadilla con el torso erguido, controlando la profundidad.','Subí empujando con todo el pie.'], q:'goblet squat talones elevados técnica'},
+  ext_cadera:{w:'Glúteos.', s:['Usá el banco de hiperextensiones a 45°, con la cadera apenas por encima del borde del almohadón y los pies trabados.','Bajá flexionando desde la cadera.','Subí apretando los glúteos hasta quedar alineada, sin pasarte hacia atrás.','Mirar hacia abajo y redondear apenas la espalda alta ayuda a que trabaje más el glúteo.'], q:'extensión de cadera banco 45 glúteo técnica'},
+  ext_espalda:{w:'Zona lumbar y glúteos.', s:['Usá el banco de hiperextensiones, con la cadera apoyada en el almohadón y los pies trabados.','Bajá el torso flexionando desde la cadera.','Subí hasta que el cuerpo quede alineado, sin arquear la espalda hacia atrás.','Hacelo controlado, sin impulso.'], q:'extensión de espalda banco técnica'},
+};
+const HOWTO_MATCH = [
+  [/hip thrust/, 'hipthrust'], [/hack/, 'hack'], [/bulgara.*smith|smith.*bulgara/, 'bulgara_smith'], [/bulgara/, 'bulgara'],
+  [/gemelos/, 'gemelos_prensa'], [/prensa.*pies/, 'prensa_altos'], [/prensa/, 'prensa'], [/extension de cuadriceps/, 'ext_cuad'],
+  [/isquios sentada|femoral sentad/, 'curl_fem_sentada'], [/isquios acostada|femoral acostad/, 'curl_fem_acostada'], [/curl femoral/, 'curl_fem'],
+  [/abduc/, 'abduccion'], [/aduccion/, 'aduccion'], [/elevaciones? de piernas/, 'elev_piernas'], [/elevaciones? de rodillas/, 'elev_rodillas'],
+  [/sit ?up/, 'situp'], [/jalon|dorsalera/, 'jalon'], [/remo invertido/, 'remo_inv'], [/remo a un brazo/, 'remo_brazo'], [/remo con barra/, 'remo_barra'],
+  [/remo/, 'remo_sentado'], [/pullover|lat push/, 'pullover'], [/inclinado/, 'press_inclinado'], [/pecho/, 'press_pecho'],
+  [/press militar/, 'militar'], [/laterales/, 'laterales'], [/reverse fly|pajaros|rear delt/, 'pajaros'], [/face pull/, 'facepull'],
+  [/triceps.*sobre (la )?cabeza/, 'triceps_overhead'], [/triceps unilateral/, 'triceps_uni'], [/triceps/, 'triceps_polea'],
+  [/martillo/, 'martillo'], [/curl con barra en polea/, 'curl_polea'], [/curl de biceps|curl/, 'curl'], [/press frances/, 'frances'],
+  [/peso muerto rumano/, 'rdl'], [/peso muerto/, 'deadlift'], [/buenos dias/, 'goodmorning'], [/pallof/, 'pallof'], [/woodchopper/, 'woodchopper'],
+  [/plancha lateral/, 'plancha_lat'], [/zancada/, 'zancada_atras'], [/estocada/, 'estocada_adelante'], [/step ?ups?/, 'stepup'],
+  [/patada/, 'patada'], [/goblet/, 'goblet'], [/extension de cadera|extension de espalda enfocada/, 'ext_cadera'], [/extension de espalda/, 'ext_espalda'],
+];
+function howtoFor(ex) {
+  if (ex.howto && ex.howto.length) return {w:'', s:ex.howto, q:ex.name + ' técnica'};
+  const n = normName(ex.name);
+  const m = HOWTO_MATCH.find(([re]) => re.test(n));
+  return m ? HOWTO[m[1]] : null;
+}
+function howtoBlock(ex) {
+  const h = howtoFor(ex);
+  const video = `https://www.youtube.com/results?search_query=${encodeURIComponent(h ? h.q : ex.name + ' técnica')}`;
+  return `<details class="acc"><summary><span class="sl">${ic('info', 18)} Cómo se hace</span><span class="chev">${ic('chev', 18)}</span></summary><div class="acc-body">
+    ${h ? `${h.w ? `<div class="small"><b>Trabaja:</b> ${esc(h.w)}</div>` : ''}<ol style="padding-left:20px;font-size:14.5px;line-height:1.45;display:flex;flex-direction:column;gap:4px">${h.s.map(t => `<li>${esc(t)}</li>`).join('')}</ol>`
+      : `<p class="small muted">Todavía no hay explicación para este ejercicio. Podés escribirla desde Modo editar rutina.</p>`}
+    <a class="linkbtn" href="${video}" target="_blank" rel="noopener">▶ Ver videos de referencia</a>
+  </div></details>`;
+}
+
 /* --- Inicio --- */
 function vHome() {
   const b = activeBlock(); const wk = blockWeek(b); const ms = sortedMeas(); const cur = ms[ms.length - 1]; const prev = ms[ms.length - 2];
@@ -1126,6 +1210,7 @@ function sessionCard(s, ex, pos, color) {
     ${sug ? `<div class="sugg ${sug.lvl}">${ic(sug.icon, 19)}<div>${esc(sug.text)}${sug.extra ? `<small>${esc(sug.extra)}</small>` : ''}<small>Sugerencia según tu última sesión. El peso no cambia solo.</small></div></div>` : ''}
     ${ex.warn[0] ? `<div class="warnline">${ic('warn', 17)}<div>${esc(ex.warn[0])}${ex.warn.length > 1 ? ' <i>(+ ver indicaciones)</i>' : ''}</div></div>` : ''}
     ${firstTip ? `<div class="tip">${ic('target', 17)}<div>${esc(firstTip)}</div></div>` : ''}
+    ${howtoBlock(ex)}
     ${indications(ex)}
     <div class="log" data-ex="${ex.id}">
       <div class="lbl"><span>${wLabel}</span>${last?.weight != null ? `<button class="linkbtn" data-act="same-weight" data-ex="${ex.id}" data-w="${last.weight}">Usar ${fmtN(last.weight)} kg</button>` : ''}</div>
@@ -1707,7 +1792,7 @@ function routineCard(d, ex, pos) {
   return `<div class="ex ${ex.optional ? 'optional' : ''}" style="--c:${d.color}"><div class="ex-in">
     <div class="ex-h"><div style="min-width:0"><div class="ex-pos">${pos}</div><div class="ex-n">${esc(ex.name)}</div>${ex.sub ? `<div class="ex-s">${esc(ex.sub)}</div>` : ''}</div>
     ${UI.editing ? '' : `<button class="iconbtn" data-act="history" data-ex="${ex.id}" aria-label="Ver historial">${ic('hist')}</button>`}</div>
-    ${exTags(ex)}${exFacts(ex)}${indications(ex)}
+    ${exTags(ex)}${exFacts(ex)}${howtoBlock(ex)}${indications(ex)}
     ${UI.editing ? `<div class="edit-tools"><button class="iconbtn" data-act="ex-move" data-day="${d.key}" data-ex="${ex.id}" data-dir="-1" aria-label="Subir">${ic('up', 18)}</button><button class="iconbtn" data-act="ex-move" data-day="${d.key}" data-ex="${ex.id}" data-dir="1" aria-label="Bajar">${ic('down', 18)}</button><button class="btn sm ghost" data-act="ex-edit" data-day="${d.key}" data-ex="${ex.id}">${ic('edit', 17)} Editar</button><button class="iconbtn" style="color:var(--down)" data-act="ex-del" data-day="${d.key}" data-ex="${ex.id}" aria-label="Eliminar">${ic('trash', 18)}</button></div>` : ''}
   </div></div>`;
 }
@@ -1727,6 +1812,7 @@ function exForm(dayKey, ex) {
     ${t('tag', 'Etiqueta (opcional)', ex.tag, 'placeholder="ej. Prioridad alta"')}
     <div class="field"><label for="e-tech">Técnica</label><textarea id="e-tech" name="tech" rows="4">${esc(ex.tech.join('\n'))}</textarea><span class="hint">Una indicación por línea.</span></div>
     <div class="field"><label for="e-warn">Salvedades / advertencias</label><textarea id="e-warn" name="warn" rows="3">${esc(ex.warn.join('\n'))}</textarea><span class="hint">Una por línea. Se muestran destacadas.</span></div>
+    <div class="field"><label for="e-howto">Cómo se hace (opcional)</label><textarea id="e-howto" name="howto" rows="3">${esc((ex.howto || []).join('\n'))}</textarea><span class="hint">Un paso por línea. Si lo dejás vacío, se usa la explicación automática según el nombre.</span></div>
     <div class="field"><label for="e-note">Nota (opcional)</label><textarea id="e-note" name="note" rows="2">${esc(ex.note)}</textarea></div>
     ${ck('machine', 'Se hace en máquina o polea (muestra el aviso de pesos no comparables)')}
     ${ck('optional', 'Ejercicio opcional')}
@@ -1828,7 +1914,7 @@ function readExForm(form) {
   const fd = new FormData(form); const g = k => (fd.get(k) || '').toString().trim();
   const o = {name:g('name'), sub:g('sub'), sets:parseInt(g('sets')) || 0, repMin:parseInt(g('repMin')) || 0, repMax:parseInt(g('repMax')) || 0, unit:g('unit'), side:g('side'),
     weight:g('weight'), rir:g('rir'), section:g('section'), kind:g('kind'), region:g('region'), load:g('load'), tag:g('tag'),
-    tech:lines(g('tech')), warn:lines(g('warn')), note:g('note'), machine:fd.has('machine'), optional:fd.has('optional'), bigJump:fd.has('bigJump')};
+    tech:lines(g('tech')), warn:lines(g('warn')), howto:lines(g('howto')), note:g('note'), machine:fd.has('machine'), optional:fd.has('optional'), bigJump:fd.has('bigJump')};
   if (!o.name) return 'Poné el nombre del ejercicio.';
   if (o.sets < 1 || o.sets > 10) return 'Las series tienen que estar entre 1 y 10.';
   if (o.repMin < 1) return 'Indicá el mínimo de repeticiones.';
