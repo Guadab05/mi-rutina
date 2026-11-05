@@ -831,6 +831,62 @@ function setWeekMark(dateISO, key, val) {
   const mon = mondayOf(dateISO); S.weekMarks[mon] = S.weekMarks[mon] || {};
   if (val) S.weekMarks[mon][key] = val; else delete S.weekMarks[mon][key];
 }
+/* ---------- Gasto calórico estimado ----------
+   kcal = MET × peso (kg) × horas. MET = intensidad típica de la actividad (Compendio de Actividades Físicas).
+   Es una estimación: si hay un número de reloj o banda cardíaca, se usa ese. */
+const MET = {pesas:4.0, pesasLo:3.5, pesasHi:6.0, 'Caminata rápida':4.3, 'Cinta con inclinación':6.0, 'Bicicleta':6.8, 'Elíptico':5.0, 'Trote suave':7.0, 'Running':8.0, 'Otro':5.0};
+function bodyWeightAt(date) {
+  const ms = sortedMeas().filter(m => m.weight != null);
+  const before = ms.filter(m => m.date <= date); const m = (before.length ? before : ms).slice(-1)[0];
+  return m ? m.weight : null;
+}
+function sessionMinutes(s) {
+  if (num(s.durationMin)) return {min:num(s.durationMin), src:'manual'};
+  const sets = Object.values(s.entries || {}).filter(e => e.saved).reduce((a, e) => a + (e.reps || []).filter(r => r != null && r !== '').length, 0);
+  if (s.startedAt && s.finishedAt) { const m = (s.finishedAt - s.startedAt) / 60000; if (m >= 15 && m <= 150) return {min:Math.round(m), src:'timer'}; }
+  return {min:Math.max(15, Math.round(sets * 2.5)), src:'series'}; // ~2,5 min por serie incluyendo descansos
+}
+function sessionKcal(s) {
+  const w = bodyWeightAt(s.date); const M = sessionMinutes(s);
+  const c = s.cardio && num(s.cardio.minutes) ? {min:num(s.cardio.minutes), met:MET[s.cardio.activity] || MET.Otro} : null;
+  if (num(s.kcalManual)) return {kcal:num(s.kcalManual), src:'reloj', min:M.min, msrc:M.src};
+  if (!w) return null;
+  const cardio = c ? c.met * w * c.min / 60 : 0;
+  return {kcal:MET.pesas * w * M.min / 60 + cardio, lo:MET.pesasLo * w * M.min / 60 + cardio, hi:MET.pesasHi * w * M.min / 60 + cardio, min:M.min, msrc:M.src, cardio, src:'estimado'};
+}
+function runKcal(r) {
+  if (num(r.kcalManual)) return {kcal:num(r.kcalManual), src:'reloj'};
+  const w = bodyWeightAt(r.date); if (!w) return null;
+  const act = r.activity || 'Running';
+  if (r.distance && (act === 'Running' || act === 'Trote suave')) return {kcal:w * r.distance, src:'estimado'}; // ≈ 1 kcal por kg por km
+  if (r.duration) return {kcal:(MET[act] || MET.Otro) * w * r.duration / 60, src:'estimado'};
+  return null;
+}
+const kcalTxt = k => k ? `≈ ${(Math.round(k.kcal / 10) * 10).toLocaleString('es-AR')} kcal` : '';
+function dayTrainingKcal(date) {
+  return S.sessions.filter(x => x.status === 'done' && x.date === date).reduce((a, x) => a + (sessionKcal(x)?.kcal || 0), 0)
+    + S.runs.filter(r => r.date === date).reduce((a, r) => a + (runKcal(r)?.kcal || 0), 0);
+}
+function kcalCardHTML(s) {
+  const k = sessionKcal(s); const M = sessionMinutes(s);
+  const srcTxt = {timer:'medida desde que empezaste hasta que finalizaste', series:'estimada por la cantidad de series (≈2,5 min c/u)', manual:'cargada por vos'}[M.src];
+  return `<div class="section-title">Gasto calórico <small>estimado</small></div>
+  <div class="card" style="--c:var(--primary)">
+    <div id="kcalest">${kcalEstHTML(s)}</div>
+    <div class="grid2" style="margin-top:12px">
+      <div><div class="lbl"><span>Duración</span></div><label class="numin"><input inputmode="numeric" data-sfield="durationMin" value="${s.durationMin ?? ''}" placeholder="${M.min}" aria-label="Duración en minutos"><span>min</span></label></div>
+      <div><div class="lbl"><span>Del reloj (opcional)</span></div><label class="numin"><input inputmode="numeric" data-sfield="kcalManual" value="${s.kcalManual ?? ''}" placeholder="—" aria-label="Calorías del reloj"><span>kcal</span></label></div>
+    </div>
+    <p class="small muted" style="margin-top:8px">Duración ${srcTxt}. Si usás reloj o banda cardíaca, cargá su número: es más preciso que la estimación.</p>
+  </div>`;
+}
+function kcalEstHTML(s) {
+  const k = sessionKcal(s);
+  if (!k) return `<p class="small muted">Cargá tu peso en <b>Cuerpo</b> para estimar el gasto.</p>`;
+  return `<div class="row" style="justify-content:space-between;align-items:baseline"><b style="font-size:26px;letter-spacing:-.02em">${kcalTxt(k)}</b>
+    <span class="small muted">${k.src === 'reloj' ? 'dato del reloj' : `rango ${(Math.round(k.lo / 10) * 10).toLocaleString('es-AR')}–${(Math.round(k.hi / 10) * 10).toLocaleString('es-AR')}`}</span></div>
+    ${k.cardio ? `<div class="small muted">Incluye ${kcalTxt({kcal:k.cardio}).replace('≈ ', '≈')} del cardio.</div>` : ''}`;
+}
 const sortedMeas = () => [...S.measurements].sort((a, b) => a.date.localeCompare(b.date));
 
 /* ---------- 6. Componentes UI ---------- */
@@ -1279,6 +1335,7 @@ function vSession(id) {
   <div class="stack">${g.main.map(ex => card(ex, ++idx)).join('')}</div>
   ${g.core.length ? `<div class="grouphead" style="--c:${day.color}">Abdomen / core</div><div class="stack" style="margin-top:8px">${g.core.map(ex => card(ex, 'A' + (g.core.indexOf(ex) + 1))).join('')}</div>` : ''}
   ${cardioBlock(s)}
+  ${kcalCardHTML(s)}
   <div class="section-title">Notas de la sesión</div>
   <textarea data-sfield="notes" placeholder="Cómo te sentiste, energía, molestias…">${esc(s.notes || '')}</textarea>
   <div class="sticky-finish stack">
@@ -1336,7 +1393,7 @@ function vRunning() {
   ${sat >= 3 ? `<div class="banner warn" style="margin-top:10px">${ic('warn')}<div>Reemplazaste ${sat} de los últimos 4 sábados por running. Conviene revisar la programación del gimnasio.</div></div>` : ''}
   <button class="btn block" style="margin-top:14px;background:${DAY_COLORS.run}" data-act="run-new">${ic('plus')} Registrar ${esc(PROFILE.cardioLabel.toLowerCase())}</button>
   <div class="section-title">Historial</div>
-  ${runs.length ? `<div class="stack">${runs.map(x => `<button class="listrow" style="--c:${DAY_COLORS.run}" data-act="run-edit" data-id="${x.id}"><span class="bar"></span><span class="mid"><b>${fmtDate(x.date)} · ${x.activity ? esc(x.activity) + ' · ' : ''}${x.duration ? x.duration + ' min' : '—'}${x.distance ? ' · ' + fmtN(x.distance) + ' km' : ''}</b><span>${esc(runPace(x) || '')}${x.notes ? ' · ' + esc(x.notes) : ''}</span></span>${ic('edit', 18)}</button>`).join('')}</div>` : `<div class="empty"><b>Sin registros todavía</b>Registrá fecha, duración${PROFILE.activities ? ', actividad' : ', distancia'} y sensaciones.</div>`}`;
+  ${runs.length ? `<div class="stack">${runs.map(x => `<button class="listrow" style="--c:${DAY_COLORS.run}" data-act="run-edit" data-id="${x.id}"><span class="bar"></span><span class="mid"><b>${fmtDate(x.date)} · ${x.activity ? esc(x.activity) + ' · ' : ''}${x.duration ? x.duration + ' min' : '—'}${x.distance ? ' · ' + fmtN(x.distance) + ' km' : ''}</b><span>${esc(runPace(x) || '')}${runKcal(x) ? (runPace(x) ? ' · ' : '') + kcalTxt(runKcal(x)) : ''}${x.notes ? ' · ' + esc(x.notes) : ''}</span></span>${ic('edit', 18)}</button>`).join('')}</div>` : `<div class="empty"><b>Sin registros todavía</b>Registrá fecha, duración${PROFILE.activities ? ', actividad' : ', distancia'} y sensaciones.</div>`}`;
 }
 function runPace(x) {
   if (x.pace) return 'Ritmo ' + x.pace + ' /km';
@@ -1375,7 +1432,9 @@ function vProgress() {
     const ss = sessionsSorted().filter(s => s.status === 'done' && inBlock(s));
     const rs = S.runs.filter(r => filter === 'all' || r.blockId === filter);
     const total = ss.length + rs.length;
-    body = `<div class="grid3" style="margin-bottom:12px"><div class="metric"><div class="l">Gimnasio</div><div class="v">${ss.length}</div></div><div class="metric"><div class="l">Running</div><div class="v">${rs.length}</div></div><div class="metric"><div class="l">Total</div><div class="v">${total}</div></div></div>`;
+    const mon = mondayOf(todayISO()); const wk = Array.from({length:7}, (_, i) => addDays(mon, i)).reduce((a, d) => a + dayTrainingKcal(d), 0);
+    body = `<div class="grid3" style="margin-bottom:8px"><div class="metric"><div class="l">Gimnasio</div><div class="v">${ss.length}</div></div><div class="metric"><div class="l">${esc(PROFILE.cardioLabel)}</div><div class="v">${rs.length}</div></div><div class="metric"><div class="l">Total</div><div class="v">${total}</div></div></div>
+    ${wk ? `<div class="metric" style="margin-bottom:12px;display:flex;justify-content:space-between;align-items:center"><div><div class="l">Gasto en entrenamientos esta semana</div><div class="v">≈ ${(Math.round(wk / 10) * 10).toLocaleString('es-AR')}<small>kcal</small></div></div><span class="small muted" style="text-align:right">estimado,<br>sin ${PROFILE.id === 'guada' ? 'boxeo' : 'actividad no registrada'}</span></div>` : ''}`;
     body += total ? recentListFiltered(ss, rs) : `<div class="empty"><b>Sin sesiones</b>Finalizá un entrenamiento para verlo acá.</div>`;
   }
   return `<div class="topbar"><div><h1>Progreso</h1><div class="sub">Historial por ejercicio y sesiones</div></div></div>
@@ -1386,9 +1445,9 @@ function vProgress() {
 function recentListFiltered(ss, rs) {
   const items = [...ss.map(s => ({t:'s', d:s.date, s})), ...rs.map(r => ({t:'r', d:r.date, r}))].sort((a, b) => b.d.localeCompare(a.d));
   return `<div class="stack">${items.map(it => {
-    if (it.t === 'r') return `<button class="listrow" style="--c:${DAY_COLORS.run}" data-act="run-edit" data-id="${it.r.id}"><span class="bar"></span><span class="mid"><b>${esc(it.r.activity || PROFILE.cardioLabel)}</b><span>${fmtDate(it.r.date)}${it.r.duration ? ' · ' + it.r.duration + ' min' : ''}${it.r.distance ? ' · ' + fmtN(it.r.distance) + ' km' : ''}</span></span>${ic('right')}</button>`;
+    if (it.t === 'r') return `<button class="listrow" style="--c:${DAY_COLORS.run}" data-act="run-edit" data-id="${it.r.id}"><span class="bar"></span><span class="mid"><b>${esc(it.r.activity || PROFILE.cardioLabel)}</b><span>${fmtDate(it.r.date)}${it.r.duration ? ' · ' + it.r.duration + ' min' : ''}${it.r.distance ? ' · ' + fmtN(it.r.distance) + ' km' : ''}${runKcal(it.r) ? ' · ' + kcalTxt(runKcal(it.r)) : ''}</span></span>${ic('right')}</button>`;
     const blk = blockById(it.s.blockId) || activeBlock(); const day = dayOf(blk, it.s.dayKey) || {name:it.s.dayKey, color:'#888'};
-    return `<button class="listrow" style="--c:${day.color}" data-act="session-view" data-id="${it.s.id}"><span class="bar"></span><span class="mid"><b>${esc(day.name)}${it.s.recoveryOf ? ' <span class="small muted">· recuperación</span>' : ''}</b><span>${fmtDate(it.s.date)} · ${Object.values(it.s.entries).filter(e => e.saved).length} ejercicios · ${esc(blk.name)}</span></span>${ic('right')}</button>`;
+    return `<button class="listrow" style="--c:${day.color}" data-act="session-view" data-id="${it.s.id}"><span class="bar"></span><span class="mid"><b>${esc(day.name)}${it.s.recoveryOf ? ' <span class="small muted">· recuperación</span>' : ''}</b><span>${fmtDate(it.s.date)} · ${Object.values(it.s.entries).filter(e => e.saved).length} ejercicios${sessionKcal(it.s) ? ' · ' + kcalTxt(sessionKcal(it.s)) : ''}</span></span>${ic('right')}</button>`;
   }).join('')}</div>`;
 }
 function showHistory(exId) {
@@ -1429,6 +1488,7 @@ function showSessionDetail(id) {
   openSheet(`${day.name} · ${fmtDate(s.date)}`, `<p class="small muted" style="margin-bottom:10px">${esc(blk.name)} · ${esc(day.title)}${s.recoveryOf ? ` · <b>${esc(recLabel(s))} (${fmtDate(s.recoveryOf.date)})</b>` : ''}</p>
     <div class="hist">${items.map(({e}) => `<div class="hrow"><div class="top"><b>${esc(e.name)}</b></div><div class="reps">${e.weight != null ? fmtN(e.weight) + ' kg' : 'Sin carga'}<small>${esc(entryReps(e))}${e.rir != null ? ' · RIR ' + rirTxt(e.rir) : ''}</small></div>${e.notes ? `<div class="n">${esc(e.notes)}</div>` : ''}</div>`).join('')}
     ${extra.map(e => `<div class="hrow"><div class="top"><b>${esc(e.name)}</b><span class="small muted">ya no está en la rutina</span></div><div class="reps">${e.weight != null ? fmtN(e.weight) + ' kg' : 'Sin carga'}<small>${esc(entryReps(e))}</small></div></div>`).join('')}</div>
+    ${sessionKcal(s) ? `<div class="note" style="margin-top:10px">${ic('heart', 17)}<div><b>Gasto ${sessionKcal(s).src === 'reloj' ? 'del reloj' : 'estimado'}:</b> ${kcalTxt(sessionKcal(s))} · ${sessionKcal(s).min} min</div></div>` : ''}
     ${s.cardio && s.cardio.minutes ? `<div class="note" style="margin-top:10px">${ic('run', 17)}<div><b>Cardio:</b> ${esc(s.cardio.minutes)} min${s.cardio.activity ? ' · ' + esc(s.cardio.activity) : ''}${s.cardio.notes ? ' · ' + esc(s.cardio.notes) : ''}</div></div>` : ''}
     ${s.notes ? `<div class="note" style="margin-top:10px">${ic('info', 17)}<div>${esc(s.notes)}</div></div>` : ''}
     <div class="stack" style="margin-top:14px"><a class="btn block ghost" href="#/sesion/${s.id}" data-act="sheet-close">${ic('edit', 18)} Corregir esta sesión</a><button class="btn block danger" data-act="session-del" data-id="${s.id}">${ic('trash', 18)} Eliminar sesión</button></div>`);
@@ -1713,6 +1773,7 @@ function vFood() {
       ${tg.kcal ? `<div style="text-align:right"><div class="small muted" style="font-weight:700">${T.kcal <= tg.kcal ? 'Restan' : 'Excedido'}</div><b style="font-size:18px;color:${T.kcal <= tg.kcal ? 'var(--ink)' : 'var(--down)'}">${r0(Math.abs(tg.kcal - T.kcal)).toLocaleString('es-AR')}</b></div>` : ''}</div>
     <div class="progress" style="height:10px;margin-top:8px"><i style="width:${tg.kcal ? Math.min(100, T.kcal / tg.kcal * 100) : 0}%;background:${tg.kcal && T.kcal > tg.kcal * 1.05 ? 'var(--down)' : MACRO_COL.kcal}"></i></div>
     ${macroBar('Proteínas', T.p, tg.p, 'g', MACRO_COL.p)}${macroBar('Carbohidratos', T.c, tg.c, 'g', MACRO_COL.c)}${macroBar('Grasas', T.f, tg.f, 'g', MACRO_COL.f)}
+    ${(() => { const tk = dayTrainingKcal(date); return tk ? `<div class="note" style="margin-top:12px">${ic('heart', 17)}<div><b>Entrenamiento ${isToday ? 'de hoy' : 'de ese día'}: ≈ ${(Math.round(tk / 10) * 10).toLocaleString('es-AR')} kcal</b> (estimado). Es informativo: los objetivos del nutricionista ya suelen contemplar tu actividad.</div></div>` : ''; })()}
     ${!tg.kcal ? `<button class="btn sm soft block" style="margin-top:12px" data-act="food-targets">${ic('target', 17)} Cargar objetivos del nutricionista</button>` : ''}
   </div>
   ${MEALS.map(([k, label]) => { const its = items.filter(e => e.meal === k); const t = totalsOf(its);
@@ -2033,10 +2094,12 @@ function showFinishSummary(id) {
         <div class="ring-in"><b>${done}/${total}</b><span>ejercicios</span></div></div>
       <div class="done-title">${done >= total ? '¡Sesión completa!' : 'Sesión registrada'}</div>
       <div class="done-sub">${esc(day.name)}${s.recoveryOf ? ' (recuperación)' : ''} · semana ${Math.min(blockWeek(blk), blk.weeks)} de ${blk.weeks}</div></div>
-    <div class="done-stats">${stat('Series', sets, '', 0)}${stat('Repeticiones', reps, '', 1)}${stat('Volumen', vol, 'kg', 2)}${stat('Para subir', ups, ups === 1 ? 'ejercicio' : 'ejercicios', 3)}</div>
+    ${(() => { const k = sessionKcal(s); if (!k) return ''; const v = Math.round(k.kcal / 10) * 10;
+      return `<div class="metric" style="margin-top:16px;animation:rise 420ms var(--e-out) both;animation-delay:120ms;display:flex;justify-content:space-between;align-items:center;border-color:color-mix(in srgb,${day.color} 30%,var(--line))"><div><div class="l">Gasto calórico ${k.src === 'reloj' ? 'del reloj' : 'estimado'}</div><div class="v">≈ <span data-count="${v}">${REDUCE() ? v.toLocaleString('es-AR') : 0}</span><small>kcal</small></div></div><div class="small muted" style="text-align:right">${k.min} min${k.src === 'reloj' ? '' : `<br>rango ${(Math.round(k.lo / 10) * 10).toLocaleString('es-AR')}–${(Math.round(k.hi / 10) * 10).toLocaleString('es-AR')}`}</div></div>`; })()}
+    <div class="done-stats" style="margin-top:8px">${stat('Series', sets, '', 0)}${stat('Repeticiones', reps, '', 1)}${stat('Volumen', vol, 'kg', 2)}${stat('Para subir', ups, ups === 1 ? 'ejercicio' : 'ejercicios', 3)}</div>
     ${better.length ? `<div class="section-title" style="font-size:16px">Mejoras vs. la vez anterior</div><div class="stack" style="gap:6px">${better.map((t, i) => `<div class="done-row" style="animation-delay:${480 + i * 80}ms">${ic('up', 18)}<div>${esc(t)}</div></div>`).join('')}</div>`
       : firsts === done && done ? `<p class="small muted" style="margin-top:14px;text-align:center">Es la primera vez que registrás estos ejercicios: la próxima vas a ver acá tus mejoras.</p>` : ''}
-    <p class="small muted" style="margin-top:12px;text-align:center">Volumen = kilos × repeticiones de todas las series.</p>
+    <p class="small muted" style="margin-top:12px;text-align:center">Volumen = kilos × repeticiones. Gasto = intensidad típica de pesas × tu peso × duración (podés corregir la duración o cargar el dato del reloj en la sesión).</p>
     <button class="btn block" style="margin-top:14px;background:${day.color}" data-act="sheet-close">Listo</button>`);
   if (REDUCE()) return;
   requestAnimationFrame(() => requestAnimationFrame(() => { const v = $('.ring .val', sc); if (v) v.style.strokeDashoffset = v.dataset.off; }));
@@ -2168,12 +2231,13 @@ document.addEventListener('click', async e => {
         ${PROFILE.activities ? `<div class="field"><label for="r-act">Actividad</label><select id="r-act" name="activity">${PROFILE.activities.map(a => `<option ${r.activity === a ? 'selected' : ''}>${esc(a)}</option>`).join('')}</select></div>` : ''}
         <div class="grid2"><div class="field"><label for="r-dur">Duración (min)</label><input id="r-dur" name="duration" inputmode="decimal" value="${r.duration ?? ''}"></div><div class="field"><label for="r-dist">Distancia (km)</label><input id="r-dist" name="distance" inputmode="decimal" value="${r.distance ?? ''}"></div></div>
         <div class="field"><label for="r-pace">Ritmo promedio (opcional)</label><input id="r-pace" name="pace" placeholder="ej. 6:45" value="${esc(r.pace || '')}"><span class="hint">Si lo dejás vacío se calcula con duración y distancia.</span></div>
+        <div class="field"><label for="r-kcal">Calorías del reloj (opcional)</label><input id="r-kcal" name="kcalManual" inputmode="numeric" value="${r.kcalManual ?? ''}"><span class="hint">Si lo dejás vacío, se estima con tu peso y la distancia o duración.</span></div>
         <div class="field"><label for="r-notes">Sensación / notas</label><textarea id="r-notes" name="notes">${esc(r.notes || '')}</textarea></div>
         <button type="button" class="btn block" style="background:${DAY_COLORS.run}" data-act="run-save">${ic('check')} Guardar</button>
         ${r.id ? `<button type="button" class="btn block danger" data-act="run-del" data-id="${r.id}">${ic('trash', 18)} Eliminar</button>` : ''}</form>`);
       break; }
     case 'run-save': { const f = $('#runform'); const fd = new FormData(f); const id = f.dataset.id;
-      const o = {date:fd.get('date') || todayISO(), activity:(fd.get('activity') || '').toString(), duration:num(fd.get('duration')), distance:num(fd.get('distance')), pace:(fd.get('pace') || '').trim(), notes:(fd.get('notes') || '').trim()};
+      const o = {date:fd.get('date') || todayISO(), activity:(fd.get('activity') || '').toString(), duration:num(fd.get('duration')), distance:num(fd.get('distance')), pace:(fd.get('pace') || '').trim(), kcalManual:num(fd.get('kcalManual')), notes:(fd.get('notes') || '').trim()};
       if (!o.duration && !o.distance) { toast('Cargá al menos duración o distancia.'); break; }
       if (id) Object.assign(S.runs.find(x => x.id === id), o); else S.runs.push({id:uid('r'), blockId:S.activeBlockId, ...o});
       await persist(true); closeSheet(); rerender(); toast('Guardado'); break; }
@@ -2243,8 +2307,11 @@ document.addEventListener('input', e => {
   if (e.target.id === 'foodsearch') { const box = $('#foodresults'); if (box) box.innerHTML = foodResultsHTML(e.target.value, e.target.dataset.meal); return; }
   if (e.target.id === 'foodqty') { updateQtyPreview(); return; }
   const t = e.target; const s = curSession(); if (!s) return;
-  if (t.dataset.cfield) { s.cardio = s.cardio || {}; s.cardio[t.dataset.cfield] = t.dataset.cfield === 'minutes' ? num(t.value) : t.value; persist(); return; }
-  if (t.dataset.sfield) { if (t.dataset.sfield === 'date' && !t.value) return; s[t.dataset.sfield] = t.value; persist(); return; }
+  if (t.dataset.cfield) { s.cardio = s.cardio || {}; s.cardio[t.dataset.cfield] = t.dataset.cfield === 'minutes' ? num(t.value) : t.value; persist(); const el = $('#kcalest'); if (el) el.innerHTML = kcalEstHTML(s); return; }
+  if (t.dataset.sfield) { if (t.dataset.sfield === 'date' && !t.value) return;
+    s[t.dataset.sfield] = ['durationMin', 'kcalManual'].includes(t.dataset.sfield) ? num(t.value) : t.value; persist();
+    if (['durationMin', 'kcalManual', 'date'].includes(t.dataset.sfield)) { const el = $('#kcalest'); if (el) el.innerHTML = kcalEstHTML(s); }
+    return; }
   const log = t.closest('.log'); if (!log || !t.dataset.efield) return;
   const ex = exOfSession(s, log.dataset.ex); const en = ensureEntry(s, ex);
   if (t.dataset.efield === 'weight') en.weight = num(t.value);
