@@ -466,67 +466,94 @@ function E(o) { // normaliza un ejercicio con valores por defecto
 }
 
 function seedDaysGuada() {
+  const C = G_COLORS;
+  const LAST01 = 'La última serie puede llegar a RIR 0-1 si la recuperación es buena.';
   return [
-    { key:'mar', weekday:2, name:'Martes', title:'Glúteos + cuádriceps + abdomen', color:DAY_COLORS.mar, intro:'', exercises:[
-      E({id:'m1', name:'Hip Thrust', sets:4, repMin:6, repMax:8, weight:'60-90 kg totales', rir:'2', kind:'compound', bigJump:true, tag:'Prioridad alta',
-        tech:HT_TECH, warn:['El peso indicado es solamente orientativo.'],
-        note:'Si completás 8 repeticiones con mucha facilidad y te quedan claramente más de 3-4 repeticiones posibles, aumentá la carga.'}),
-      E({id:'m2', name:'Hack Squat o Sentadilla', sets:4, repMin:8, repMax:10, weight:'Hack squat: aprox. 40-70 kg cargados, según la máquina', rir:'2', kind:'compound', machine:true,
-        warn:['El peso de una hack squat cambia muchísimo entre máquinas debido al ángulo, peso del carro y sistema utilizado. El número no debe tomarse como universal.']}),
-      E({id:'m3', name:'Búlgara con énfasis en glúteo', sets:3, repMin:8, repMax:10, side:'pierna', weight:'10-16 kg por mancuerna', rir:'1-2', kind:'compound',
-        tech:['Paso relativamente largo.','Torso ligeramente inclinado hacia adelante.','Mantener estabilidad.','Priorizar rango y control antes que peso.']}),
-      E({id:'m4', name:'Prensa', sets:3, repMin:10, repMax:12, weight:'100-160 kg', rir:'2', kind:'compound', machine:true, bigJump:true,
-        warn:['El peso de las prensas varía muchísimo según la máquina. Ajustar según dificultad real y rango de movimiento.']}),
-      E({id:'m5', name:'Extensión de cuádriceps', sets:3, repMin:12, repMax:15, weight:'25-40 kg', rir:'1-2', machine:true}),
+    { key:'mar', weekday:2, name:'Martes', title:'Glúteos + cuádriceps + abdomen', color:C.mar, intro:'Estímulos principales de glúteo: hip thrust, búlgara, prensa y abducción.', exercises:[
+      E({id:'m1', name:'Hip Thrust', sets:4, repMin:6, repMax:8, weight:'60-90 kg', rir:'1-2', kind:'compound', bigJump:true, tag:'Prioridad glúteo',
+        tech:['Extensión completa de cadera.','Controlar la bajada.','Evitar hiperextender exageradamente la zona lumbar.','Mantener pelvis estable.','Progresar en carga cuando completes el rango con buena técnica.']}),
+      E({id:'m2', name:'Hack Squat o Sentadilla', sets:4, repMin:8, repMax:10, weight:'Hack squat: aprox. 40-70 kg cargados', rir:'1-2', kind:'compound', machine:true,
+        warn:['El peso depende muchísimo de la máquina, la inclinación y el peso del carro. Priorizar profundidad, control y RIR antes que el número absoluto de kilos.']}),
+      E({id:'m3', name:'Sentadilla Búlgara con énfasis en glúteo', sets:3, repMin:8, repMax:10, side:'pierna', weight:'10-16 kg por mancuerna', rir:'1-2', kind:'compound', tag:'Prioridad glúteo',
+        tech:['Paso relativamente largo.','Torso ligeramente inclinado hacia adelante.','Mantener estabilidad.','Priorizar recorrido y control.']}),
+      E({id:'m4', name:'Prensa', sets:3, repMin:10, repMax:12, weight:'100-160 kg', rir:'1-2', kind:'compound', machine:true, bigJump:true,
+        warn:['El peso de una prensa no es comparable entre máquinas. Usarlo únicamente como referencia inicial.']}),
+      E({id:'m5', name:'Extensión de cuádriceps', sets:3, repMin:12, repMax:15, weight:'25-40 kg', rir:'1-2', machine:true, note:LAST01}),
       E({id:'m6', name:'Curl femoral', sets:3, repMin:10, repMax:12, weight:'20-35 kg', rir:'1-2', machine:true}),
-      E({id:'m7', name:'Abducción de cadera', sets:3, repMin:15, repMax:20, weight:'35-60 kg', rir:'1-2', machine:true, tech:ABD_TECH}),
+      E({id:'m7', name:'Abducción de cadera', sets:3, repMin:15, repMax:20, weight:'35-60 kg', rir:'0-2', machine:true, tag:'Prioridad glúteo',
+        tech:['Controlar completamente el movimiento.','No balancear el cuerpo.','No acortar exageradamente el recorrido solamente para mover más peso.']}),
       E({id:'ma1', name:'Elevaciones de piernas', sub:'En silla romana o paralelas', section:'core', sets:3, repMin:10, repMax:15, weight:'Peso corporal', region:'core', load:'bodyweight',
-        tech:['Intentar acompañar la elevación con movimiento de pelvis y abdomen, evitando solamente balancear las piernas.']}),
+        tech:['Acompañar el movimiento con retroversión/elevación de pelvis y contracción abdominal.','Evitar limitarse a balancear las piernas.']}),
       E({id:'ma2', name:'Sit-up en banco declinado con peso', section:'core', sets:3, repMin:8, repMax:12, weight:'5-10 kg (inicial)', region:'core',
-        note:'Aumentar progresivamente cuando puedas completar 12 repeticiones con buena técnica.'}),
+        note:'Aumentar progresivamente cuando completes 12 repeticiones con buena técnica.'}),
     ]},
-    { key:'jue', weekday:4, name:'Jueves', title:'Torso + cadena posterior + abdomen', color:DAY_COLORS.jue,
-      intro:'Priorizar especialmente espalda, hombros, bíceps y tríceps. No hace falta un volumen excesivo de pecho porque hacés boxeo tres veces por semana.', exercises:[
-      E({id:'j1', name:'Jalón al pecho con agarre neutro', sets:4, repMin:8, repMax:10, weight:'30-45 kg', rir:'2', kind:'compound', region:'upper', machine:true, tag:'Base para dominada',
-        note:'Uno de los objetivos secundarios es desarrollar fuerza de tracción que en el futuro pueda ayudarte a progresar hacia una dominada.'}),
+    { key:'jue', weekday:4, name:'Jueves', title:'Torso + posterior + abdomen', color:C.jue,
+      intro:'Prioridad: espalda, hombros, brazos y trabajo complementario de isquios. Sin ningún tipo de peso muerto.', exercises:[
+      E({id:'j1', name:'Jalón al pecho con agarre neutro', sets:4, repMin:8, repMax:10, weight:'30-45 kg', rir:'1-2', kind:'compound', region:'upper', machine:true, tag:'Base para dominada',
+        note:'Objetivo secundario: desarrollar fuerza de tracción. Hoy no hacés dominadas ni dominadas asistidas.'}),
       E({id:'j2', name:'Remo sentado o remo con pecho apoyado', sets:3, repMin:8, repMax:12, weight:'30-45 kg', rir:'1-2', kind:'compound', region:'upper', machine:true}),
-      E({id:'j3', name:'Pullover en polea', sub:'Con brazos casi extendidos', sets:3, repMin:10, repMax:15, weight:'Definir según la máquina', rir:'1-2', region:'upper', machine:true,
-        tech:['Mantener brazos casi extendidos.','Buscar movimiento desde hombro/dorsal.','No convertirlo en una extensión de tríceps.']}),
+      E({id:'j3', name:'Pullover en polea', sub:'Con brazos casi extendidos', sets:3, repMin:10, repMax:15, weight:'Según la máquina', rir:'1-2', region:'upper', machine:true,
+        tech:['Brazos casi extendidos.','Movimiento desde hombros/dorsales.','Evitar transformarlo en una extensión de tríceps.']}),
       E({id:'j4', name:'Remo invertido', sub:'En Smith o TRX', sets:3, repMin:8, repMax:12, weight:'Peso corporal', rir:'', kind:'compound', region:'upper', load:'bodyweight',
-        warn:['Actualmente nunca pudiste hacer dominadas, ni libres ni asistidas.','Empezar con una posición relativamente vertical y progresivamente ir colocando el cuerpo más horizontal a medida que aumente tu fuerza.'],
-        note:'La dificultad se modifica cambiando la inclinación.'}),
-      E({id:'j5', name:'Press de pecho', sub:'Con mancuernas o máquina', sets:3, repMin:8, repMax:10, weight:'Mancuernas: aprox. 8-14 kg cada una', rir:'2', kind:'compound', region:'upper'}),
+        warn:['Comenzar relativamente vertical y progresar hacia una posición más horizontal.'], note:'La dificultad se regula modificando la inclinación del cuerpo.'}),
+      E({id:'j5', name:'Press de pecho', sub:'Con mancuernas o máquina', sets:3, repMin:8, repMax:10, weight:'Mancuernas: aprox. 8-14 kg cada una', rir:'1-2', kind:'compound', region:'upper'}),
       E({id:'j6', name:'Reverse Fly / Pájaros', sets:3, repMin:12, repMax:20, weight:'Aprox. 4-7 kg por mancuerna, si es con mancuernas', rir:'', region:'upper',
-        tech:['Priorizar ejecución y control.']}),
-      E({id:'j7', name:'Elevaciones laterales', sets:3, repMin:12, repMax:20, weight:'Aprox. 4-7 kg por mancuerna', rir:'1-2', region:'upper',
-        tech:['No balancear exageradamente el cuerpo solamente para poder mover más peso.']}),
-      E({id:'j8', name:'Extensión de tríceps en polea', sets:3, repMin:10, repMax:15, weight:'15-25 kg, según la polea', rir:'', region:'upper', machine:true}),
-      E({id:'j9', name:'Curl de bíceps', sets:3, repMin:10, repMax:15, weight:'Aprox. 6-10 kg por mancuerna', rir:'1-2', region:'upper'}),
-      E({id:'j10', name:'Peso muerto rumano', sets:3, repMin:8, repMax:10, weight:'40-60 kg', rir:'2', kind:'compound', tech:RDL_TECH,
-        warn:['No llevar sistemáticamente este ejercicio al fallo porque al día siguiente tenés boxeo.']}),
-      E({id:'ja1', name:'Pallof Press', section:'core', sets:3, repMin:10, repMax:12, side:'lado', weight:'Aprox. 7,5-15 kg, según la polea', region:'core',
-        note:'Objetivo: estabilidad y antirrotación del core. Tiene buena transferencia al boxeo.'}),
+        tech:['Priorizar ejecución y control antes que peso.']}),
+      E({id:'j7', name:'Elevaciones laterales', sets:3, repMin:12, repMax:20, weight:'Aprox. 4-7 kg por mancuerna', rir:'0-2', region:'upper',
+        tech:['Evitar balancear exageradamente el cuerpo para poder utilizar más peso.'], note:LAST01}),
+      E({id:'j8', name:'Extensión de tríceps en polea', sets:3, repMin:10, repMax:15, weight:'15-25 kg', rir:'1-2', region:'upper', machine:true, note:LAST01}),
+      E({id:'j9', name:'Curl de bíceps', sets:3, repMin:10, repMax:15, weight:'6-10 kg por mancuerna', rir:'1-2', region:'upper', note:LAST01}),
+      E({id:'j11', name:'Curl femoral sentado o acostado', sets:3, repMin:10, repMax:15, weight:'20-35 kg', rir:'1-2', machine:true,
+        note:'Reemplaza definitivamente al peso muerto que figuraba antes en el jueves.'}),
+      E({id:'ja1', name:'Pallof Press', section:'core', sets:3, repMin:10, repMax:12, side:'lado', weight:'7,5-15 kg', region:'core',
+        note:'Objetivo: antirrotación y estabilidad del core. Transferencia útil al boxeo.'}),
       E({id:'ja2', name:'Elevaciones de rodillas', section:'core', sets:3, repMin:8, repMax:15, weight:'Peso corporal', region:'core', load:'bodyweight',
-        tech:['Colgada, si tenés suficiente agarre.','En silla romana, si resulta más cómodo.']}),
+        tech:['Colgada, si el agarre lo permite.','En silla romana.']}),
     ]},
-    { key:'sab', weekday:6, name:'Sábado', title:'Glúteos + isquios + abdomen', color:DAY_COLORS.sab,
-      intro:'Es el día con mayor énfasis específico en glúteos.', exercises:[
-      E({id:'s1', name:'Peso muerto rumano', sets:4, repMin:6, repMax:8, weight:'45-70 kg', rir:'2', kind:'compound', tech:RDL_TECH,
-        note:'Aplicar las mismas indicaciones técnicas del jueves.'}),
-      E({id:'s2', name:'Hip Thrust', sets:3, repMin:8, repMax:10, weight:'60-90 kg', rir:'1-2', kind:'compound', bigJump:true, tag:'Prioridad alta', tech:HT_TECH}),
-      E({id:'s3', name:'Zancada hacia atrás con paso largo', sets:3, repMin:8, repMax:12, side:'pierna', weight:'Aprox. 10-16 kg por mancuerna', rir:'1-2', kind:'compound',
-        tech:['Paso relativamente largo.','Ligera inclinación del torso.','Buscar participación importante del glúteo.']}),
-      E({id:'s4', name:'Prensa con pies relativamente altos', sets:3, repMin:10, repMax:12, weight:'100-160 kg', rir:'2', kind:'compound', machine:true, bigJump:true,
-        warn:['Colocar los pies algo más altos para aumentar participación de glúteos e isquios, pero no tan arriba como para perder estabilidad o despegar excesivamente la pelvis del respaldo.']}),
-      E({id:'s5', name:'Curl femoral', sets:3, repMin:10, repMax:15, weight:'20-35 kg', rir:'', machine:true}),
-      E({id:'s6', name:'Abducción de cadera', sets:3, repMin:15, repMax:20, weight:'35-60 kg', rir:'', machine:true, tech:ABD_TECH}),
-      E({id:'s7', name:'Extensión de cadera en banco de 45°', sets:2, repMin:12, repMax:15, weight:'Peso corporal inicialmente; después aprox. +5-15 kg', rir:'', optional:true, tag:'Opcional',
-        tech:['Buscar extensión de cadera y contracción de glúteo sin hiperextender exageradamente la zona lumbar.']}),
+    { key:'sab', weekday:6, name:'Sábado', title:'Glúteos + isquios + abdomen', color:C.sab,
+      intro:'El día con mayor énfasis específico en glúteos. Sin ningún tipo de peso muerto.', exercises:[
+      E({id:'s8', name:'Sentadilla en máquina', sets:4, repMin:8, repMax:10, weight:'Probar aprox. 50-80 kg', rir:'1-2', kind:'compound', machine:true, tag:'Prioridad glúteo',
+        warn:['El peso es solo orientativo: depende completamente del tipo de máquina.'],
+        tech:['Buena profundidad.','Movimiento controlado.','No rebotar abajo.','No acortar el recorrido para utilizar más peso.','Si la máquina lo permite, pies ligeramente adelantados para más participación de glúteos.']}),
+      E({id:'s2', name:'Hip Thrust', sets:3, repMin:8, repMax:10, weight:'60-90 kg', rir:'1-2', kind:'compound', bigJump:true, tag:'Prioridad glúteo',
+        tech:['Extensión completa de cadera.','Controlar la bajada.','Evitar hiperextensión lumbar.']}),
+      E({id:'s3', name:'Zancada hacia atrás con paso largo', sets:3, repMin:8, repMax:12, side:'pierna', weight:'10-16 kg por mancuerna', rir:'1-2', kind:'compound', tag:'Prioridad glúteo',
+        tech:['Paso relativamente largo.','Ligera inclinación del torso.','Buscar buena participación del glúteo.','Mantener estabilidad.']}),
+      E({id:'s4', name:'Prensa con pies relativamente altos', sets:3, repMin:10, repMax:12, weight:'100-160 kg', rir:'1-2', kind:'compound', machine:true, bigJump:true, tag:'Prioridad glúteo',
+        tech:['Colocar los pies algo más altos para aumentar la participación de glúteos e isquios.'],
+        warn:['No colocar los pies tan altos que se pierda estabilidad, se despegue excesivamente la pelvis del respaldo o se reduzca el rango de movimiento.']}),
+      E({id:'s5', name:'Curl femoral', sets:3, repMin:10, repMax:15, weight:'20-35 kg', rir:'1-2', machine:true}),
+      E({id:'s6', name:'Abducción de cadera', sets:3, repMin:15, repMax:20, weight:'35-60 kg', rir:'0-2', machine:true, tag:'Prioridad glúteo',
+        tech:['Priorizar control y recorrido.'], note:LAST01}),
+      E({id:'s7', name:'Extensión de cadera/espalda en banco de 45°', sets:2, repMin:12, repMax:15, weight:'Peso corporal', rir:'', optional:true, tag:'Solo si está autorizado',
+        warn:['Realizar únicamente si está autorizado para Guadalupe. Si hay cualquier duda sobre si entra dentro de su restricción, omitirlo.','No reemplazarlo por buenos días, pull-throughs ni otras bisagras de cadera.']}),
       E({id:'sa1', name:'Woodchopper en polea', section:'core', sets:3, repMin:10, repMax:12, side:'lado', weight:'7,5-15 kg', region:'core'}),
       E({id:'sa2', name:'Plancha lateral', section:'core', sets:3, repMin:30, repMax:45, unit:'seg', side:'lado', weight:'Peso corporal; cuando resulte fácil, +5-10 kg', region:'core', load:'time'}),
     ]},
   ];
 }
+/* Restricción personal permanente de Guada: ningún peso muerto ni bisagras de cadera como sustituto */
+const GUADA_RESTRICTION = 'NO realizar ningún tipo de peso muerto.';
+const FORBIDDEN_GUADA = [/peso muerto/, /\bdeadlift\b/, /\brdl\b/, /rumano/, /piernas rigidas/, /trap ?bar/, /buenos dias/, /good ?morning/, /pull ?through/, /bisagra/, /hip hinge/];
+function forbiddenFor(name) { if (PROFILE.id !== 'guada') return null; const n = normName(name); return FORBIDDEN_GUADA.some(re => re.test(n)) ? GUADA_RESTRICTION : null; }
+const GUADA_FOOD_PLAN = {"app": "mi-rutina", "kind": "food-plan", "profile": "guada", "title": "Plan nutricional · noviembre 2026", "date": "11/2026", "targets": {"kcal": 1750, "p": 96, "c": 160, "f": 60}, "combos": [{"name": "Desayuno/merienda · Opción 1", "desc": "Yogur con quinoa y huevo", "items": [{"name": "Opción 1: yogur con quinoa y huevo", "kcal": 365, "p": 23, "c": 43, "f": 11, "note": "Yogur deslactosado 150 g · banana mediana 100 g · quinoa pop 30 g (3 cdas) · 1 huevo 50 g"}]}, {"name": "Desayuno/merienda · Opción 2", "desc": "Rapidita proteica con huevos", "items": [{"name": "Opción 2: rapidita con queso y huevos", "kcal": 365, "p": 23, "c": 43, "f": 11, "note": "Rapidita integral 40 g · queso port salut deslactosado 30 g · 2 huevos revueltos · tomate 100 g"}]}, {"name": "Desayuno/merienda · Opción 3", "desc": "Tostadas con queso y huevo", "items": [{"name": "Opción 3: tostadas con queso y huevo", "kcal": 365, "p": 23, "c": 43, "f": 11, "note": "2 tostadas integrales 60 g · queso port salut deslactosado 30 g · 2 huevos revueltos · fruta mediana 100 g"}]}, {"name": "Desayuno/merienda · Opción 4", "desc": "Pancake casero dulce", "items": [{"name": "Opción 4: pancake casero", "kcal": 365, "p": 23, "c": 43, "f": 11, "note": "Pancake (1 huevo + 3 cdas harina/avena) · yogur deslactosado 60 g · fruta 120 g · 1 clara extra"}]}, {"name": "Almuerzo/cena · Almuerzo Tipo 1", "desc": "Carne y arroz integral", "items": [{"name": "Almuerzo Tipo 1: carne y arroz integral", "kcal": 510, "p": 38, "c": 45, "f": 19, "note": "Cuadril o lomo 150 g · arroz integral cocido 120 g · 1 taza de vegetales cocidos · aceite de oliva 10 g"}]}, {"name": "Almuerzo/cena · Almuerzo Tipo 2", "desc": "Wok de pollo y yamaní", "items": [{"name": "Almuerzo Tipo 2: wok de pollo y yamaní", "kcal": 510, "p": 42, "c": 43, "f": 18, "note": "Pechuga 150 g · arroz yamaní cocido 120 g · espinaca y cebolla · aceite de oliva 10 g"}]}, {"name": "Almuerzo/cena · Cena Tipo 1", "desc": "Milanesa al horno y puré", "items": [{"name": "Cena Tipo 1: milanesa al horno y puré", "kcal": 510, "p": 35, "c": 42, "f": 21, "note": "Milanesa de carne o pollo al horno 180 g · puré de calabaza y zanahoria 220 g · tomate cocido · aceite de oliva 10 g"}]}, {"name": "Almuerzo/cena · Cena Tipo 2", "desc": "Omelette y papa al horno", "items": [{"name": "Cena Tipo 2: omelette y papa al horno", "kcal": 510, "p": 37, "c": 42, "f": 20, "note": "4 claras + 1 huevo · queso port salut deslactosado 40 g · papa al horno 150 g · espinaca al vapor"}]}]};
+const FOOD_PLAN_ID = 'nutri-2026-11';
+/* Aplica el plan de la nutri una sola vez (después se puede editar libremente) */
+function applyFoodPlan(food, p) {
+  food.targets = {kcal:p.targets.kcal, p:p.targets.p, c:p.targets.c, f:p.targets.f};
+  (p.combos || []).forEach(c => { food.combos = food.combos.filter(x => x.name !== c.name); food.combos.push({id:uid('cb'), name:c.name, desc:c.desc || '', items:(c.items || []).map(it => ({name:it.name, grams:null, per100:null, kcal:it.kcal, p:it.p, c:it.c, f:it.f, src:'nutri', note:it.note || ''}))}); });
+  food.plan = {title:p.title || '', date:p.date || ''};
+}
+const ROUTINE_VERSION_GUADA = 2;
+/* Reemplaza la rutina del bloque activo por la versión 2, conservando ids (y por lo tanto el historial) de los ejercicios que siguen */
+function migrateGuadaRoutine(st) {
+  if ((st.routineVersion || 1) >= ROUTINE_VERSION_GUADA) return;
+  const b = st.blocks.find(x => x.id === st.activeBlockId) || st.blocks[st.blocks.length - 1];
+  if (b) b.days = seedDaysGuada();
+  st.routineVersion = ROUTINE_VERSION_GUADA;
+  st.restrictions = [GUADA_RESTRICTION];
+}
+
 function seedCardioGuada() {
   return {
     warmup:['5-10 minutos caminando o trotando suavemente.'],
@@ -634,9 +661,9 @@ const PROFILES = {
   guada: {
     id:'guada', name:'Guada', avatar:'#9C3D5A', desc:'Boxeo + gimnasio · glúteos como prioridad',
     colors:G_COLORS, cardioColor:G_COLORS.run, schedule:SCHEDULE_GUADA, seedDays:seedDaysGuada, seedCardio:seedCardioGuada,
-    boxing:true, saturday:'choice', cardioLabel:'Running', activities:null, warmup:null, cardioAfter:{}, future:true,
-    rirText:'<b>RIR</b> = repeticiones en reserva. <b>RIR 2</b> = terminar la serie sintiendo que podrías realizar aproximadamente otras dos repeticiones correctamente.',
-    progress:null, // usa los textos originales con incrementos en kg
+    boxing:true, flexDays:true, saturday:'choice', cardioLabel:'Running', activities:null, warmup:null, cardioAfter:{}, future:true,
+    rirText:'<b>RIR</b> = Repeticiones en Reserva.<br><b>RIR 2</b> = terminar la serie sintiendo que todavía podrías hacer aproximadamente 2 repeticiones más con buena técnica.<br><b>RIR 1</b> = aproximadamente 1 repetición adicional posible.<br><b>RIR 0</b> = fallo o prácticamente ninguna repetición adicional posible.',
+    progress:{up:'Podés aumentar ligeramente la carga en la próxima sesión.', hold:'Mantener carga.', down:'Revisar carga o mantener hasta consolidar el rango.'},
   },
   priscila: {
     id:'priscila', name:'Priscila', avatar:'#3D4C7D', desc:'Gimnasio de lunes a viernes',
@@ -732,9 +759,11 @@ function normalize(st) {
   st.blocks = (st.blocks && st.blocks.length) ? st.blocks : d.blocks;
   st.blocks.forEach(b => { b.days = (b.days || []).map(day => Object.assign({intro:''}, day, {exercises:(day.exercises || []).map(E)})); b.running = b.running || seedRunning(); });
   if (!st.blocks.find(b => b.id === st.activeBlockId)) st.activeBlockId = st.blocks[st.blocks.length - 1].id;
-  st.sessions = st.sessions || []; st.runs = st.runs || []; st.measurements = st.measurements || []; st.weekMarks = st.weekMarks || {}; st.checkins = st.checkins || []; st.boxing = st.boxing || []; st.settings = Object.assign({autoRest:true, sound:true}, st.settings || {});
+  st.sessions = st.sessions || []; st.runs = st.runs || []; st.measurements = st.measurements || []; st.weekMarks = st.weekMarks || {}; st.checkins = st.checkins || []; st.dayRest = st.dayRest || {}; st.boxing = st.boxing || []; st.settings = Object.assign({autoRest:true, sound:true}, st.settings || {});
   st.food = Object.assign({targets:{}, days:{}, foods:[], combos:[]}, st.food || {});
   st.profile = PID; delete st.__migrated;
+  if (PID === 'guada') migrateGuadaRoutine(st);
+  if (PID === 'guada' && st.food.planId !== FOOD_PLAN_ID) { applyFoodPlan(st.food, GUADA_FOOD_PLAN); st.food.planId = FOOD_PLAN_ID; }
   if (PID === 'guada') st.blocks.forEach(b => b.days.forEach(d => { if (G_OLD_COLORS[d.key] && d.color === G_OLD_COLORS[d.key]) d.color = G_COLORS[d.key]; }));
   return st;
 }
@@ -1149,6 +1178,7 @@ function guideHTMLPriscila() {
    Si un ejercicio tiene pasos propios (campo howto), se usan esos. */
 const HOWTO = {
   hipthrust:{w:'Glúteos (principal) e isquiotibiales.', s:['Sentate en el piso con la parte alta de la espalda (justo debajo de los omóplatos) apoyada en el borde de un banco.','Apoyá la barra sobre la cadera con una almohadilla. Pies apoyados al ancho de los hombros y rodillas flexionadas.','Empujá con los talones y subí la cadera hasta que el torso quede paralelo al piso y las rodillas formen un ángulo recto.','Arriba, apretá los glúteos un segundo con el mentón levemente hacia el pecho.','Bajá controlado, sin apoyar del todo la cola en el piso. Si hay máquina de hip thrust, la idea es la misma.'], q:'hip thrust con barra técnica'},
+  sent_maquina:{w:'Glúteos y cuádriceps.', s:['Ubicate en la máquina con la espalda apoyada y los hombros debajo de las almohadillas (o la barra guiada sobre los trapecios).','Pies al ancho de los hombros; si la máquina lo permite, apenas adelantados para que trabaje más el glúteo.','Destrabá y bajá controlado hasta una buena profundidad, sin rebotar abajo.','Subí empujando con todo el pie, sin acortar el recorrido para mover más peso.'], q:'sentadilla en máquina técnica glúteos'},
   hack:{w:'Cuádriceps y glúteos.', s:['Es una máquina con respaldo inclinado y almohadillas para los hombros.','Apoyá la espalda y la cadera en el respaldo, con los hombros debajo de las almohadillas.','Pies en la plataforma al ancho de la cadera. Destrabá los seguros.','Bajá flexionando las rodillas hasta donde puedas mantener la espalda apoyada (idealmente muslos paralelos a la plataforma o más).','Subí empujando con todo el pie, sin trabar las rodillas arriba. Si no hay hack, la alternativa es la sentadilla con barra sobre los trapecios.'], q:'hack squat máquina técnica'},
   bulgara:{w:'Glúteos y cuádriceps.', s:['Parate de espaldas a un banco y apoyá el empeine de un pie atrás, sobre el banco.','Adelantá el otro pie: un paso largo carga más el glúteo; uno corto, más el cuádriceps.','Con una mancuerna en cada mano, inclinate apenas hacia adelante.','Bajá flexionando la rodilla de adelante hasta que el muslo quede casi paralelo al piso. La rodilla de atrás va hacia el piso.','Subí empujando con el talón de la pierna de adelante. Hacé todas las repeticiones y recién ahí cambiá de pierna.'], q:'sentadilla búlgara glúteo técnica'},
   bulgara_smith:{w:'Glúteos y cuádriceps.', s:['Poné un banco detrás de la máquina Smith y apoyá la barra sobre los trapecios.','Apoyá el empeine de un pie atrás, sobre el banco, y adelantá el otro pie.','Destrabá la barra y bajá flexionando la rodilla de adelante, en línea recta, hasta que el muslo quede casi paralelo al piso.','Subí empujando con la pierna de adelante, sin apoyarte en la de atrás.','Hacé todas las repeticiones con una pierna y después cambiá.'], q:'sentadilla búlgara en smith técnica'},
@@ -1198,6 +1228,7 @@ const HOWTO = {
   ext_espalda:{w:'Zona lumbar y glúteos.', s:['Usá el banco de hiperextensiones, con la cadera apoyada en el almohadón y los pies trabados.','Bajá el torso flexionando desde la cadera.','Subí hasta que el cuerpo quede alineado, sin arquear la espalda hacia atrás.','Hacelo controlado, sin impulso.'], q:'extensión de espalda banco técnica'},
 };
 const HOWTO_MATCH = [
+  [/sentadilla en maquina/, 'sent_maquina'],
   [/hip thrust/, 'hipthrust'], [/hack/, 'hack'], [/bulgara.*smith|smith.*bulgara/, 'bulgara_smith'], [/bulgara/, 'bulgara'],
   [/gemelos/, 'gemelos_prensa'], [/prensa.*pies/, 'prensa_altos'], [/prensa/, 'prensa'], [/extension de cuadriceps/, 'ext_cuad'],
   [/isquios sentada|femoral sentad/, 'curl_fem_sentada'], [/isquios acostada|femoral acostad/, 'curl_fem_acostada'], [/curl femoral/, 'curl_fem'],
@@ -1376,6 +1407,61 @@ function boxCard() {
     ${recent.length ? `<div class="stack" style="gap:6px;margin-top:10px">${recent.map(b => `<button class="listrow" style="--c:${BOX_COLOR};padding:10px 12px" data-act="box-edit" data-id="${b.id}"><span class="bar"></span><span class="mid"><b style="font-size:15px">${fmtDate(b.date)} · ${esc(b.type || 'Boxeo')}</b><span>${b.duration ? b.duration + ' min · ' : ''}${esc((BOX_INT.find(x => x[0] === b.intensity) || ['', ''])[1].split(' · ')[0])}${boxKcal(b) ? ' · ' + kcalTxt(boxKcal(b)) : ''}</span></span>${ic('edit', 18)}</button>`).join('')}</div>` : ''}</div>`;
 }
 
+
+/* ---------- Actividad de cada día (perfil Guada) ----------
+   Cada día se puede registrar gym, boxeo, running o descanso, y combinarlos.
+   El plan semanal solo sugiere; lo que cuenta para las calorías es lo registrado. */
+function dayLog(date) {
+  return {gym:S.sessions.filter(x => x.date === date && x.status !== 'discarded'), box:(S.boxing || []).filter(b => b.date === date),
+    run:S.runs.filter(r => r.date === date), rest:!!(S.dayRest || {})[date]};
+}
+const ROT = ['mar', 'jue', 'sab'];
+function suggestedRoutine(date) {
+  const sc = SCHEDULE[parseISO(date).getDay()];
+  if (sc && sc.day && ROT.includes(sc.day)) return sc.day;
+  const last = S.sessions.filter(x => x.status === 'done' && x.date <= date && ROT.includes(x.dayKey)).sort((a, b) => (a.date + a.startedAt).localeCompare(b.date + b.startedAt)).pop();
+  return last ? ROT[(ROT.indexOf(last.dayKey) + 1) % ROT.length] : 'mar';
+}
+function plannedLabel(date) {
+  const sc = SCHEDULE[parseISO(date).getDay()];
+  if (sc.type === 'box') return 'Boxeo'; if (sc.type === 'rest') return 'Descanso';
+  if (sc.day === 'sab') return 'Gym (glúteos) o running'; const d = dayOf(activeBlock(), sc.day); return d ? 'Gym · ' + d.title : 'Gym';
+}
+function dayPanel(date) {
+  const L = dayLog(date); const blk = activeBlock(); const sug = suggestedRoutine(date); const sd = dayOf(blk, sug);
+  const any = L.gym.length || L.box.length || L.run.length; const tk = dayTrainingKcal(date);
+  const isToday = date === todayISO(); const future = date > todayISO();
+  const row = (icn, color, title, body) => `<div class="card" style="padding:12px 14px;--c:${color}"><div class="row" style="gap:10px;align-items:flex-start"><span class="sw" style="width:36px;height:36px;border-radius:11px;background:${color};color:#fff;display:flex;align-items:center;justify-content:center;flex:none">${ic(icn, 19)}</span><div style="flex:1;min-width:0"><b style="font-size:16px">${title}</b>${body}</div></div></div>`;
+  const gymBody = L.gym.length ? L.gym.map(x => { const d = dayOf(blockById(x.blockId) || blk, x.dayKey) || {}; return `<button class="listrow" style="--c:${d.color};padding:9px 11px;margin-top:6px" data-act="${x.status === 'done' ? 'session-view' : 'go-session'}" data-id="${x.id}"><span class="bar"></span><span class="mid"><b style="font-size:14.5px">${esc(d.name || '')} · ${x.status === 'done' ? 'registrado' : 'en curso'}</b><span>${sessionKcal(x) ? kcalTxt(sessionKcal(x)) : ''}</span></span>${ic('right', 18)}</button>`; }).join('')
+    : future ? `<div class="small muted">Disponible ese día.</div>` : `<button class="btn sm block" style="margin-top:8px;background:${sd.color}" data-act="day-gym" data-day="${sug}" data-date="${date}">Entrenar ${esc(sd.name.toLowerCase())} <span style="opacity:.8;font-weight:600">· sugerida</span></button>
+      <div class="row" style="gap:6px;margin-top:6px;flex-wrap:wrap"><span class="small muted">Otra:</span>${ROT.filter(k => k !== sug).map(k => { const d = dayOf(blk, k); return d ? `<button class="btn sm ghost" style="min-height:34px" data-act="day-gym" data-day="${k}" data-date="${date}">${esc(d.name)}</button>` : ''; }).join('')}</div>`;
+  const boxBody = (L.box.map(b => `<button class="listrow" style="--c:${BOX_COLOR};padding:9px 11px;margin-top:6px" data-act="box-edit" data-id="${b.id}"><span class="bar"></span><span class="mid"><b style="font-size:14.5px">${b.duration || '—'} min · ${esc((BOX_INT.find(x => x[0] === b.intensity) || ['', ''])[1].split(' · ')[0])}</b><span>${boxKcal(b) ? kcalTxt(boxKcal(b)) : ''}</span></span>${ic('edit', 17)}</button>`).join(''))
+    + (future ? '' : `<button class="btn sm ghost block" style="margin-top:8px" data-act="box-new" data-date="${date}">${ic('plus', 16)} ${L.box.length ? 'Agregar otra' : 'Registrar boxeo'}</button>`);
+  const runBody = (L.run.map(r => `<button class="listrow" style="--c:${DAY_COLORS.run};padding:9px 11px;margin-top:6px" data-act="run-edit" data-id="${r.id}"><span class="bar"></span><span class="mid"><b style="font-size:14.5px">${r.duration ? r.duration + ' min' : ''}${r.distance ? ' · ' + fmtN(r.distance) + ' km' : ''}</b><span>${runKcal(r) ? kcalTxt(runKcal(r)) : ''}</span></span>${ic('edit', 17)}</button>`).join(''))
+    + (future ? '' : `<button class="btn sm ghost block" style="margin-top:8px" data-act="run-new" data-date="${date}">${ic('plus', 16)} ${L.run.length ? 'Agregar otro' : 'Registrar running'}</button>`);
+  return `<p class="small muted" style="margin:-4px 0 10px">Plan de la semana: ${esc(plannedLabel(date))}. Podés registrar lo que hiciste realmente, y combinar actividades.</p>
+    <div class="stack" style="gap:8px">
+      ${row('train', sd.color, 'Gimnasio', gymBody)}
+      ${row('glove', BOX_COLOR, 'Boxeo', boxBody)}
+      ${row('run', DAY_COLORS.run, 'Running', runBody)}
+      ${any ? '' : row('moon', '#8A8290', 'Descanso', `<button class="btn sm ${L.rest ? '' : 'ghost'} block" style="margin-top:8px" data-act="day-rest" data-date="${date}">${L.rest ? ic('check', 16) + ' Día de descanso' : 'Marcar como descanso'}</button>`)}
+    </div>
+    ${tk ? `<div class="note" style="margin-top:10px">${ic('heart', 17)}<div><b>Gasto del día: ${kcalTxt({kcal:tk})}</b> (estimado, solo lo registrado).</div></div>` : ''}`;
+}
+function openDaySheet(date) { openSheet(date === todayISO() ? 'Hoy · ' + fmtLong(date) : fmtLong(date), dayPanel(date)); }
+function dayHero() {
+  const t = todayISO(); const L = dayLog(t); const sug = suggestedRoutine(t); const d = dayOf(activeBlock(), sug); const sc = SCHEDULE[new Date().getDay()];
+  const done = [L.gym.filter(x => x.status === 'done').length ? 'gym' : '', L.box.length ? 'boxeo' : '', L.run.length ? 'running' : '', L.rest ? 'descanso' : ''].filter(Boolean);
+  const color = sc.type === 'box' ? BOX_COLOR : sc.type === 'rest' ? '#7A6F80' : d.color;
+  const primary = sc.type === 'box' && !L.box.length ? `<button class="btn" style="margin:0" data-act="box-new" data-date="${t}">Registrar boxeo</button>`
+    : sc.type === 'rest' && !done.length ? `<button class="btn" style="margin:0" data-act="day-rest" data-date="${t}">Descanso de hoy</button>`
+    : !L.gym.length ? `<button class="btn" style="margin:0" data-act="day-gym" data-day="${sug}" data-date="${t}">Entrenar ${esc(d.name.toLowerCase())}</button>` : '';
+  return `<div class="hero" style="--c:${color}"><div class="k">Hoy · ${esc(plannedLabel(t))}</div>
+    <div class="t">${done.length ? 'Registrado: ' + done.join(' + ') : '¿Qué hacés hoy?'}</div>
+    <div class="d">${done.length ? (dayTrainingKcal(t) ? kcalTxt({kcal:dayTrainingKcal(t)}) + ' estimadas' : '') : 'Gym, boxeo, running o descanso: podés combinar.'}</div>
+    <div class="${primary ? 'grid2' : ''}" style="margin-top:14px">${primary}<button class="btn ${primary ? '' : 'block'}" style="margin:0" data-act="day-sheet" data-date="${t}">${primary ? 'Otra actividad' : 'Ver / agregar'}</button></div></div>`;
+}
+
 /* --- Inicio --- */
 function vHome() {
   const b = activeBlock(); const wk = blockWeek(b); const ms = sortedMeas(); const cur = ms[ms.length - 1]; const prev = ms[ms.length - 2];
@@ -1390,6 +1476,8 @@ function vHome() {
   if (ip) {
     const day = dayOf(blockById(ip.blockId) || b, ip.dayKey) || {};
     hero = `<div class="hero" style="--c:${day.color || 'var(--primary)'}"><div class="k">Entrenamiento en curso${ip.recoveryOf ? ' · ' + esc(recLabel(ip)) : ''}</div><div class="t">${esc(day.name || '')}</div><div class="d">${esc(day.title || '')}</div><a class="btn block" href="#/sesion/${ip.id}">Continuar entrenamiento</a></div>`;
+  } else if (PROFILE.flexDays) {
+    hero = dayHero();
   } else if (isRec && todayWd === 6) {
     hero = satHero();
   } else if (ns) {
@@ -1407,7 +1495,7 @@ function vHome() {
   const satWarn = sat >= 3 ? `<div class="banner warn" style="margin-top:10px">${ic('warn')}<div>Reemplazaste ${sat} de los últimos 4 sábados por running. Conviene revisar la programación para no perder el segundo estímulo fuerte de glúteos.</div></div>` : '';
   return `
   <div class="topbar"><div><h1>Mi rutina</h1><div class="sub">${esc(PROFILE.name)} · ${esc(fmtLong(todayISO()))}</div></div></div>
-  ${hero || ''}${todayLine}${backupWarn}${satWarn}
+  ${hero || ''}${PROFILE.flexDays ? '' : todayLine}${backupWarn}${satWarn}
   <div class="section-title">Semana <small>${esc(b.name)}</small></div>
   <div class="week">${(() => { const ws = isRec ? weekStatus() : []; return SCHEDULE.map((sc, i) => [i, sc]).slice(1).concat([[0, SCHEDULE[0]]]).map(([i, sc]) => {
     const color = sc.day ? DAY_COLORS[sc.day] : sc.type === 'sat' ? 'var(--primary)' : '';
@@ -1420,13 +1508,19 @@ function vHome() {
     }
     const isDone = done.has(i);
     const icn = isDone ? ic('check', 14) : sc.type === 'gym' ? ic('train', 14) : sc.type === 'box' ? ic('glove', 14) : ic('moon', 14);
+    if (PROFILE.flexDays) { const dt = addDays(mondayOf(todayISO()), (i + 6) % 7); const L = dayLog(dt);
+      const logged = [L.gym.some(x => x.status === 'done') ? 'Gym' : '', L.box.length ? 'Box' : '', L.run.length ? 'Run' : ''].filter(Boolean);
+      const full = {Gym:'Gym', Box:'Boxeo', Run:'Running'}; const lbl = logged.length === 1 ? full[logged[0]] : logged.length ? logged.join('+') : L.rest ? 'Descanso' : sc.label;
+      const col = L.gym.length ? (dayOf(activeBlock(), L.gym[0].dayKey) || {}).color : L.box.length ? BOX_COLOR : L.run.length ? DAY_COLORS.run : sc.day ? DAY_COLORS[sc.day] : '';
+      const icn2 = logged.length || L.rest ? ic(logged.length ? 'check' : 'moon', 14) : sc.type === 'gym' ? ic('train', 14) : sc.type === 'box' ? ic('glove', 14) : ic('moon', 14);
+      return `<button class="wd ${sc.type === 'gym' || logged.length ? 'gym' : ''} ${i === todayWd ? 'today' : ''} ${logged.length ? 'done' : ''}" data-act="day-sheet" data-date="${dt}" ${col ? `style="--c:${col}"` : ''} aria-label="${WD[i]}: ${esc(lbl)}"><b>${WD3[i]}</b><span class="dot">${icn2}</span><span class="act">${esc(lbl)}</span></button>`; }
     if (sc.type === 'box' && PROFILE.boxing) { const dt = addDays(mondayOf(todayISO()), (i + 6) % 7);
       return `<button class="wd ${i === todayWd ? 'today' : ''} ${isDone ? 'done' : ''}" data-act="box-new" data-date="${dt}" aria-label="${WD[i]}: boxeo${isDone ? ', registrado' : ', registrar'}"><b>${WD3[i]}</b><span class="dot">${icn}</span><span class="act">${esc(sc.label)}</span></button>`; }
     const tag = sc.type === 'gym' ? 'button' : 'div';
     const act = sc.type !== 'gym' ? '' : sc.day === 'sab' ? 'data-act="sat-choice"' : `data-act="start" data-day="${sc.day}"`;
     return `<${tag} class="wd ${sc.type === 'gym' ? 'gym' : ''} ${i === todayWd ? 'today' : ''} ${isDone ? 'done' : ''}" ${sc.type === 'gym' ? `${act} style="--c:${color}" aria-label="Entrenar ${WD[i].toLowerCase()}"` : ''}><b>${WD3[i]}</b><span class="dot">${icn}</span><span class="act">${esc(sc.label)}</span></${tag}>`;
   }).join(''); })()}</div>
-  ${isRec ? `<p class="small muted" style="margin-top:6px">Tocá un día pasado para marcarlo como realizado o no realizado.</p>` : ''}
+  ${isRec ? `<p class="small muted" style="margin-top:6px">Tocá un día pasado para marcarlo como realizado o no realizado.</p>` : PROFILE.flexDays ? `<p class="small muted" style="margin-top:6px">Tocá cualquier día para registrar gym, boxeo, running o descanso.</p>` : ''}
   <div class="card" style="margin-top:12px"><div class="row" style="justify-content:space-between"><div><b style="font-size:17px">${esc(b.name)}</b><div class="small muted">Desde ${fmtDate(b.startDate)} · ${b.weeks} semanas</div></div><b style="font-size:17px">Semana ${Math.min(wk, b.weeks)} de ${b.weeks}</b></div>
     <div class="weeks" style="--n:${b.weeks}" role="img" aria-label="Semana ${Math.min(wk, b.weeks)} de ${b.weeks}">${Array.from({length:b.weeks}, (_, i) => `<i class="${i + 1 < wk ? 'done' : i + 1 === wk ? 'now' : ''}"></i>`).join('')}</div>
     ${wk > b.weeks ? `<div class="banner info" style="margin-top:10px">${ic('flag')}<div><b>Bloque cumplido</b> (semana ${wk}). Cuando quieras, creá el siguiente desde Rutina. El historial no se borra.</div></div>` : ''}
@@ -1978,7 +2072,7 @@ function foodResultsHTML(q, meal) {
   else list = allFoods().filter(x => normName(x.name).includes(q) || (x.barcode && x.barcode.includes(q))).slice(0, 25);
   const cmb = !q ? combos : combos.filter(c => normName(c.name).includes(q));
   const row = x => `<button class="listrow" style="--c:var(--line);padding:10px 12px" data-act="food-pick" data-id="${x.id}" data-meal="${meal}"><span class="mid"><b style="font-size:15px">${esc(x.name)}</b><span>${x.k} kcal · P ${x.p} · C ${x.c} · G ${x.f} <small>/100 g</small>${x.src !== 'base' ? ' · mío' : ''}</span></span>${ic('plus', 18)}</button>`;
-  return `${cmb.length ? `<div class="lbl" style="margin-top:4px"><span>Comidas frecuentes</span></div><div class="stack" style="gap:6px">${cmb.map(c => `<button class="listrow" style="--c:var(--primary);padding:10px 12px" data-act="combo-add" data-id="${c.id}" data-meal="${meal}"><span class="bar"></span><span class="mid"><b style="font-size:15px">${esc(c.name)}</b><span>${c.items.length} alimentos · ${r0(totalsOf(c.items).kcal)} kcal</span></span>${ic('plus', 18)}</button>`).join('')}</div>` : ''}
+  return `${cmb.length ? `<div class="lbl" style="margin-top:4px"><span>Comidas frecuentes</span></div><div class="stack" style="gap:6px">${cmb.map(c => `<button class="listrow" style="--c:var(--primary);padding:10px 12px" data-act="combo-add" data-id="${c.id}" data-meal="${meal}"><span class="bar"></span><span class="mid"><b style="font-size:15px">${esc(c.name)}</b><span>${c.desc ? esc(c.desc) + ' · ' : `${c.items.length} alimentos · `}${r0(totalsOf(c.items).kcal)} kcal · P ${fmt1(totalsOf(c.items).p)} g</span></span>${ic('plus', 18)}</button>`).join('')}</div>` : ''}
     <div class="lbl" style="margin-top:12px"><span>${q ? 'Resultados' : 'Recientes'}</span></div>
     ${list.length ? `<div class="stack" style="gap:6px">${list.map(row).join('')}</div>` : `<p class="small muted">${q ? 'No hay coincidencias. Probá con el código de barras o la carga manual (podés copiar los valores de la etiqueta).' : 'Todavía no hay recientes: buscá un alimento.'}</p>`}`;
 }
@@ -2115,6 +2209,7 @@ function vRoutine() {
     ${isActive ? `<button class="iconbtn" data-act="block-edit" aria-label="Editar datos del bloque">${ic('edit', 18)}</button>` : ''}</div>
     ${isActive ? `<div class="grid2" style="margin-top:12px"><button class="btn sm ${UI.editing ? 'dark' : 'ghost'}" data-act="toggle-edit">${ic('edit', 17)} ${UI.editing ? 'Terminar edición' : 'Editar rutina'}</button><button class="btn sm ghost" data-act="block-new">${ic('plus', 17)} Crear nuevo bloque</button></div>` : `<p class="small muted" style="margin-top:8px">Los bloques anteriores no se editan, así su historial queda intacto.</p>`}
   </div>
+  ${PROFILE.id === 'guada' ? `<div class="banner warn" style="margin-top:10px">${ic('warn')}<div><b>Restricción personal permanente:</b> ${esc(GUADA_RESTRICTION)} Tampoco se sustituye por bisagras de cadera (buenos días, pull-through…). La app no deja agregarlos.</div></div>` : ''}
   ${UI.editing ? `<div class="banner edit" style="margin-top:10px">${ic('edit')}<div><b>Modo editar rutina.</b> Cambiás la estructura (ejercicios, orden, series, técnica). El historial de entrenamientos no se modifica.</div></div>` : ''}
   <div class="seg" style="margin-top:12px">${tabs.map(([k, l]) => `<button class="${UI.routineTab === k ? 'on' : ''}" data-act="routine-tab" data-v="${k}">${l}</button>`).join('')}</div>
   <div class="${UI.editing ? 'editing' : ''}">${body}</div>`;
@@ -2164,20 +2259,25 @@ function exForm(dayKey, ex) {
 }
 function guideHTML() {
   return `<div class="stack guide" style="margin-top:12px">
-  <div class="card"><h4>Elección del peso</h4><p>Todos los pesos indicados son <b>estimaciones iniciales, no objetivos obligatorios</b>. Tener masa muscular elevada no permite predecir exactamente cuánto podés levantar: durante las primeras sesiones hay que encontrar el peso adecuado.</p></div>
-  <div class="card"><h4>Qué es el RIR</h4><p><b>RIR 2</b> = terminar la serie sintiendo que podrías hacer aproximadamente otras dos repeticiones correctamente.</p>
-    <div class="grid2" style="margin-top:10px"><div class="metric"><div class="l">Ejercicios grandes</div><div class="v">RIR 2</div></div><div class="metric"><div class="l">Ejercicios aislados</div><div class="v">RIR 1-2</div></div></div></div>
-  <div class="card"><h4>Cuándo subir el peso</h4><p class="muted" style="margin-bottom:8px">Ejemplo con 3 × 8-10:</p><div class="stack">
-    <div class="progrow" style="--c:var(--ok)"><b>10 / 10 / 10</b><span>Con buena técnica y aún ~1-2 en reserva → aumentar ligeramente el peso la próxima sesión.</span></div>
-    <div class="progrow" style="--c:var(--hold)"><b>10 / 9 / 8</b><span>Mantener el peso.</span></div>
-    <div class="progrow" style="--c:var(--down)"><b>&lt; 8</b><span>Si no llegás al mínimo del rango con buena técnica → mantener o reducir ligeramente.</span></div></div>
-    <ul style="margin-top:10px"><li>Tren superior: +1 a 2,5 kg.</li><li>Tren inferior: +2,5 a 5 kg.</li><li>Hip thrust o prensa: eventualmente +5-10 kg si la carga anterior quedó claramente liviana.</li></ul>
-    <p style="margin-top:8px"><b>La técnica y el rango de movimiento siempre tienen prioridad sobre aumentar kilos.</b></p></div>
-  <div class="banner warn">${ic('gear')}<div><b>Pesos en máquinas.</b> Los pesos de prensa, hack squat, jalones, remos, poleas, extensión de cuádriceps, curl femoral y abductores no son universalmente comparables. Una máquina que indica 40 kg puede sentirse completamente diferente de otra que también indica 40 kg: depende de poleas, palancas, inclinación, peso inicial del carro y diseño. Usá principalmente <b>RIR + técnica + rango de movimiento</b>.</div></div>
-  <div class="card"><h4>Recuperación</h4><p>Potencialmente entrenás boxeo 3 días y gimnasio 3 días. <b>No llevar sistemáticamente los compuestos al fallo.</b></p>
-    <p style="margin-top:8px">Si aparecen caída marcada del rendimiento, fatiga acumulada, piernas permanentemente pesadas, dificultad para recuperarte del boxeo o molestias articulares: <b>priorizar reducir volumen antes que agregar más entrenamiento.</b></p>
-    <div class="grid2" style="margin-top:10px"><div class="metric" style="border-left:4px solid var(--ok)"><div class="l">Puede ser normal</div><div style="font-weight:700;margin-top:3px">Molestia muscular post entrenamiento</div></div><div class="metric" style="border-left:4px solid var(--down)"><div class="l">No ignorar</div><div style="font-weight:700;margin-top:3px">Dolor articular, punzante, irradiado o que empeora durante un ejercicio</div></div></div></div>
-  <div class="banner info">${ic('info')}<div><b>No existe la reducción localizada de grasa.</b> Entrenar brazos no implica perder específicamente grasa de los brazos. La prioridad es preservar la mayor cantidad posible de músculo mientras se reduce grasa corporal.</div></div>
+  <div class="banner warn">${ic('warn')}<div><b>Restricción personal:</b> ${esc(GUADA_RESTRICTION)} No se reemplaza por bisagras de cadera como buenos días u otras variantes. Persiste aunque cambies de bloque o edites la rutina.</div></div>
+  <div class="card"><h4>Prioridades</h4><ol><li><b>Glúteos.</b> Martes: hip thrust, búlgara, prensa y abducción. Sábado: sentadilla en máquina, hip thrust, zancada atrás, prensa con pies altos y abducción.</li><li><b>Abdomen/core</b> los 3 días: flexión, control de pelvis, antirrotación, rotación y estabilidad lateral.</li><li>Mantener y desarrollar el resto, especialmente espalda, hombros y brazos.</li><li>Preservar masa muscular durante el descenso de grasa.</li></ol>
+    <p style="margin-top:8px">No se agregan ejercicios de glúteo automáticamente: primero se evalúa progresión y recuperación con esta estructura.</p></div>
+  <div class="card"><h4>Intensidad</h4><p>Sos una persona experimentada en fuerza.</p>
+    <div class="grid2" style="margin-top:10px"><div class="metric"><div class="l">Compuestos</div><div class="v">RIR 1-2</div></div><div class="metric"><div class="l">Aislados</div><div class="v">RIR 1-2</div></div></div>
+    <p style="margin-top:8px">En ejercicios seguros (abducción, extensión de cuádriceps, laterales, curl de bíceps, tríceps) la última serie puede llegar a <b>RIR 0-1</b> si la recuperación es buena. <b>No llevar sistemáticamente los ejercicios grandes al fallo.</b></p></div>
+  <div class="card"><h4>Qué es el RIR</h4><p>${PROFILE.rirText}</p></div>
+  <div class="card"><h4>Pesos</h4><p>Todos los pesos son <b>orientativos</b>. Si en la primera sesión un peso resulta claramente liviano, subí hasta encontrar una carga compatible con el RIR objetivo: no hace falta quedarse dentro del rango.</p>
+    <p style="margin-top:8px">Prioridad: 1) técnica, 2) rango de movimiento, 3) RIR, 4) progresión. No el número absoluto de kilos.</p></div>
+  <div class="banner warn">${ic('gear')}<div><b>Pesos en máquinas.</b> No son comparables entre gimnasios: prensa, hack squat, sentadilla en máquina, poleas, jalones, remos, extensión de cuádriceps, curl femoral y abductores.</div></div>
+  <div class="card"><h4>Progresión</h4><p>Bloque 1 de unas 6 semanas sin cambiar ejercicios. Progresan la carga, las repeticiones, el control y la ejecución.</p>
+    <p class="muted" style="margin:8px 0">Ejemplo con 3 × 8-10:</p><div class="stack">
+    <div class="progrow" style="--c:var(--ok)"><b>10 / 10 / 10</b><span>Con buena técnica y RIR 1-2 → podés aumentar ligeramente la carga en la próxima sesión.</span></div>
+    <div class="progrow" style="--c:var(--hold)"><b>10 / 9 / 8</b><span>Mantener carga.</span></div>
+    <div class="progrow" style="--c:var(--down)"><b>&lt; 8</b><span>Revisar carga o mantener hasta consolidar el rango.</span></div></div>
+    <p style="margin-top:8px">La app nunca modifica los pesos sola: solo sugiere.</p></div>
+  <div class="card"><h4>Objetivo corporal</h4><p>Reducir grasa preservando la mayor cantidad posible de músculo. La fuerza sigue siendo exigente: no se convierte en circuitos de altas repeticiones, cardio con pesas, HIIT ni cargas excesivamente livianas. Con boxeo 3 veces por semana no hace falta sumar mucho cardio extra.</p></div>
+  <div class="card"><h4>Recuperación</h4><p>Si aparecen caída del rendimiento, fatiga acumulada, piernas siempre pesadas, dificultad para recuperarte del boxeo o molestias articulares: <b>priorizar reducir volumen antes que agregar entrenamiento.</b> El chequeo antes de entrenar lo aplica automáticamente.</p></div>
+  <div class="banner info">${ic('info')}<div><b>No existe la reducción localizada de grasa.</b> Entrenar una zona no hace perder grasa específicamente de esa zona.</div></div>
   </div>`;
 }
 function futureHTML() {
@@ -2210,6 +2310,9 @@ function vSettings() {
     <div class="stack"><button class="btn block" data-act="export">${ic('dl')} Exportar respaldo</button>
     <label class="btn block ghost" style="cursor:pointer">${ic('ul')} Importar respaldo<input type="file" accept="application/json,.json" id="importfile" class="hide"></label></div>
     <p class="small muted" style="margin-top:10px">El respaldo es un archivo .json con composición corporal, rutina, bloques, entrenamientos, pesos, repeticiones, RIR, notas y running.</p></div>
+  <div class="card" style="margin-top:10px"><b>Plan de la nutricionista</b>
+    <p class="small muted" style="margin:4px 0 10px">${S.food.plan ? `Cargado: ${esc(S.food.plan.title || 'plan')} (${S.food.plan.date || ''}). ` : ''}Importá el archivo del plan: carga los objetivos diarios y las opciones de comidas como comidas frecuentes. No borra nada de lo que registraste.</p>
+    <label class="btn sm ghost block" style="cursor:pointer">${ic('ul', 17)} Importar plan (.json)<input type="file" accept="application/json,.json" id="planfile" class="hide"></label></div>
   <div class="card" style="margin-top:10px"><b>Temporizador de descanso</b>
     <label class="checkrow"><input type="checkbox" data-act="set-toggle" data-k="autoRest" ${S.settings.autoRest !== false ? 'checked' : ''}> Iniciar solo al cargar una serie</label>
     <label class="checkrow"><input type="checkbox" data-act="set-toggle" data-k="sound" ${S.settings.sound !== false ? 'checked' : ''}> Sonido al terminar</label>
@@ -2222,7 +2325,8 @@ function vSettings() {
 }
 
 /* ---------- 8. Acciones ---------- */
-function startSession(dayKey, recoveryOf = null) {
+function startSession(dayKey, recoveryOf = null, date = null) {
+  if (date && date !== todayISO()) { const ex = S.sessions.find(x => x.date === date && x.dayKey === dayKey && x.status === 'in_progress'); if (ex) { go('#/sesion/' + ex.id); return; } createSession(dayKey, null, null, date); return; }
   const ip = inProgressSession();
   if (ip) {
     if (ip.dayKey === dayKey && !!ip.recoveryOf === !!recoveryOf) { go('#/sesion/' + ip.id); return; }
@@ -2231,10 +2335,11 @@ function startSession(dayKey, recoveryOf = null) {
   }
   openCheckin(dayKey, recoveryOf);
 }
-function createSession(dayKey, recoveryOf, adjust) {
-  const s = {id:uid('s'), blockId:S.activeBlockId, dayKey, type:'gym', date:todayISO(), status:'in_progress', startedAt:Date.now(), finishedAt:null, entries:{}, notes:''};
+function createSession(dayKey, recoveryOf, adjust, date) {
+  const s = {id:uid('s'), blockId:S.activeBlockId, dayKey, type:'gym', date:date || todayISO(), status:'in_progress', startedAt:Date.now(), finishedAt:null, entries:{}, notes:''};
   if (recoveryOf) s.recoveryOf = recoveryOf;
   if (adjust) s.adjust = adjust;
+  if (S.dayRest) delete S.dayRest[s.date];
   S.sessions.push(s); persist(true); go('#/sesion/' + s.id);
 }
 const curSession = () => { const h = CUR.match(/^sesion\/(.+)/); return h ? S.sessions.find(s => s.id === h[1]) : null; };
@@ -2256,7 +2361,7 @@ async function finishSession(id) {
   if (!(await confirmSheet('Finalizar entrenamiento', msg, 'Finalizar'))) return;
   unsaved.forEach(ex => { const e = s.entries[ex.id]; e.saved = true; e.savedAt = Date.now(); });
   Object.keys(s.entries).forEach(k => { if (!s.entries[k].saved) delete s.entries[k]; });
-  s.status = 'done'; s.finishedAt = Date.now(); await persist(true);
+  s.status = 'done'; s.finishedAt = Date.now(); stopRest(true); await persist(true);
   go('#/entrenar'); setTimeout(() => showFinishSummary(s.id), REDUCE() ? 0 : 320);
 }
 
@@ -2310,6 +2415,18 @@ function readExForm(form) {
   return o;
 }
 
+async function importFoodPlan(file) {
+  let p; try { p = JSON.parse(await file.text()); } catch (e) { toast('El archivo no es un JSON válido.'); return; }
+  if (!p || p.kind !== 'food-plan' || !p.targets) { toast('El archivo no es un plan de comidas de esta app.'); return; }
+  if (p.profile && p.profile !== PID && PROFILES[p.profile]) { toast(`Este plan es de ${PROFILES[p.profile].name}. Cambiá a ese perfil para importarlo.`); return; }
+  const t = p.targets; const n = (p.combos || []).length;
+  const ok = await confirmSheet('Importar plan', `<b>${esc(p.title || 'Plan de comidas')}</b><br>Objetivo diario: ${t.kcal} kcal · P ${t.p} g · C ${t.c} g · G ${t.f} g<br>${n} opciones de comidas como comidas frecuentes.<br><br>Reemplaza tus objetivos actuales. Tus registros no se tocan.`, 'Importar');
+  if (!ok) return;
+  S.food.targets = {kcal:num(t.kcal), p:num(t.p), c:num(t.c), f:num(t.f)};
+  (p.combos || []).forEach(c => { S.food.combos = S.food.combos.filter(x => x.name !== c.name); S.food.combos.push({id:uid('cb'), name:c.name, desc:c.desc || '', items:(c.items || []).map(it => ({name:it.name, grams:null, per100:null, kcal:num(it.kcal), p:num(it.p), c:num(it.c), f:num(it.f), src:'nutri', note:it.note || ''}))}); });
+  S.food.plan = {title:p.title || '', date:p.date || ''};
+  await persist(true); rerender(); toast('Plan importado');
+}
 async function exportBackup() {
   const payload = {app:'mi-rutina', schema:1, profile:PID, exportedAt:new Date().toISOString(), data:S};
   const json = JSON.stringify(payload, null, 2);
@@ -2358,6 +2475,10 @@ document.addEventListener('click', async e => {
     case 'sheet-close': closeSheet(); break;
     case 'start': startSession(d.day); break;
     case 'go-running': go('#/running'); break;
+    case 'day-sheet': openDaySheet(d.date); break;
+    case 'day-gym': closeSheet(true); if (d.date && d.date !== todayISO()) delete S.dayRest[d.date]; startSession(d.day, null, d.date); break;
+    case 'go-session': go('#/sesion/' + d.id); break;
+    case 'day-rest': S.dayRest[d.date] = !S.dayRest[d.date]; if (!S.dayRest[d.date]) delete S.dayRest[d.date]; await persist(true); closeSheet(true); rerender(); toast(S.dayRest[d.date] ? 'Día de descanso registrado' : 'Descanso quitado'); break;
     case 'ck': if (CK) { CK.a[d.k] = +d.v; renderCheckin(); } break;
     case 'ck-go': finishCheckin(false); break;
     case 'ck-skip': finishCheckin(true); break;
@@ -2372,6 +2493,7 @@ document.addEventListener('click', async e => {
     case 'box-save': { const f = $('#boxform'); const fd = new FormData(f); const o = {date:fd.get('date') || todayISO(), duration:num(fd.get('duration')), type:fd.get('type'), intensity:fd.get('intensity'), kcalManual:num(fd.get('kcalManual')), notes:(fd.get('notes') || '').trim()};
       if (!o.duration) { toast('Indicá la duración.'); break; }
       if (f.dataset.id) Object.assign(S.boxing.find(x => x.id === f.dataset.id), o); else S.boxing.push({id:uid('bx'), blockId:S.activeBlockId, ...o});
+      delete S.dayRest[o.date];
       await persist(true); closeSheet(); rerender(); toast('Boxeo guardado'); break; }
     case 'box-del': if (await confirmSheet('Eliminar boxeo', 'Se borra este registro de boxeo.', 'Eliminar', true)) { S.boxing = S.boxing.filter(x => x.id !== d.id); await persist(true); rerender(); } break;
     case 'food-day': { const v = +d.v; UI.foodDate = v === 0 ? todayISO() : addDays(FD(), v); if (UI.foodDate > todayISO()) UI.foodDate = todayISO(); rerender(); break; }
@@ -2421,7 +2543,7 @@ document.addEventListener('click', async e => {
       await persist(true); rerender(); toast(`${ex.name} guardado`); break; }
     case 'entry-edit': { const s = curSession(); s.entries[d.ex].saved = false; persist(); rerender(); const c = $('#ex-' + d.ex); c && c.scrollIntoView({block:'start', behavior:'smooth'}); break; }
     case 'finish': finishSession(d.id); break;
-    case 'discard': { if (await confirmSheet('Descartar sesión', 'Se borra esta sesión y lo cargado en ella. El resto del historial no se toca.', 'Descartar', true)) { S.sessions = S.sessions.filter(x => x.id !== d.id); await persist(true); go('#/entrenar'); toast('Sesión descartada'); } break; }
+    case 'discard': { if (await confirmSheet('Descartar sesión', 'Se borra esta sesión y lo cargado en ella. El resto del historial no se toca.', 'Descartar', true)) { S.sessions = S.sessions.filter(x => x.id !== d.id); stopRest(true); await persist(true); go('#/entrenar'); toast('Sesión descartada'); } break; }
     case 'history': showHistory(d.ex); break;
     case 'session-view': showSessionDetail(d.id); break;
     case 'jump': { const el = $('#ex-' + d.ex); if (el) el.scrollIntoView({behavior:REDUCE() ? 'auto' : 'smooth', block:'start'}); break; }
@@ -2431,7 +2553,7 @@ document.addEventListener('click', async e => {
     case 'body-chart': UI.bodyChart = d.v; rerender(); break;
     // Running
     case 'run-new': case 'run-edit': {
-      const r = a === 'run-edit' ? S.runs.find(x => x.id === d.id) : {date:todayISO()};
+      const r = a === 'run-edit' ? S.runs.find(x => x.id === d.id) : {date:d.date || todayISO()};
       openSheet((a === 'run-new' ? 'Registrar ' : 'Editar ') + PROFILE.cardioLabel.toLowerCase(), `<form class="form" id="runform" data-id="${r.id || ''}">
         <div class="field"><label for="r-date">Fecha</label><input id="r-date" type="date" name="date" value="${r.date}"></div>
         ${PROFILE.activities ? `<div class="field"><label for="r-act">Actividad</label><select id="r-act" name="activity">${PROFILE.activities.map(a => `<option ${r.activity === a ? 'selected' : ''}>${esc(a)}</option>`).join('')}</select></div>` : ''}
@@ -2446,6 +2568,7 @@ document.addEventListener('click', async e => {
       const o = {date:fd.get('date') || todayISO(), activity:(fd.get('activity') || '').toString(), duration:num(fd.get('duration')), distance:num(fd.get('distance')), pace:(fd.get('pace') || '').trim(), kcalManual:num(fd.get('kcalManual')), notes:(fd.get('notes') || '').trim()};
       if (!o.duration && !o.distance) { toast('Cargá al menos duración o distancia.'); break; }
       if (id) Object.assign(S.runs.find(x => x.id === id), o); else S.runs.push({id:uid('r'), blockId:S.activeBlockId, ...o});
+      if (S.dayRest) delete S.dayRest[o.date];
       await persist(true); closeSheet(); rerender(); toast('Guardado'); break; }
     case 'run-del': if (await confirmSheet('Eliminar running', 'Se borra este registro de running.', 'Eliminar', true)) { S.runs = S.runs.filter(x => x.id !== d.id); await persist(true); rerender(); } break;
     // Mediciones
@@ -2470,6 +2593,8 @@ document.addEventListener('click', async e => {
     case 'ex-new': openSheet('Nuevo ejercicio', exForm(d.day)); break;
     case 'ex-edit': openSheet('Editar ejercicio', exForm(d.day, dayOf(activeBlock(), d.day).exercises.find(x => x.id === d.ex))); break;
     case 'ex-save': { const f = $('#exform'); const r = readExForm(f); if (typeof r === 'string') { toast(r); break; }
+      const forb = forbiddenFor(r.name + ' ' + r.sub);
+      if (forb) { openSheet('Ejercicio no permitido', `<div class="banner warn">${ic('warn')}<div><b>Restricción personal:</b> ${esc(forb)}<br>Tampoco se agregan bisagras de cadera como sustituto (buenos días, pull-through, etc.). El ejercicio no se guardó.</div></div><button class="btn block" style="margin-top:14px" data-act="sheet-close">Entendido</button>`); break; }
       const day = dayOf(activeBlock(), f.dataset.day);
       if (f.dataset.ex) Object.assign(day.exercises.find(x => x.id === f.dataset.ex), r);
       else day.exercises.push(E({...r, id:uid('ex')}));
@@ -2532,6 +2657,7 @@ document.addEventListener('change', e => {
     if (ex) { const blk = blockById(s.blockId) || activeBlock(); startRest(restFor(ex), ex.name, dayOf(blk, s.dayKey).color); }
   }
   if (e.target.id === 'importfile' && e.target.files[0]) { importBackup(e.target.files[0]); e.target.value = ''; }
+  if (e.target.id === 'planfile' && e.target.files[0]) { importFoodPlan(e.target.files[0]); e.target.value = ''; }
   if (e.target.id === 'pdffile' && e.target.files[0]) { importAnthropometryPdf(e.target.files[0]); e.target.value = ''; }
 });
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden' && S) Store.save(S).catch(() => {}); });
@@ -2545,7 +2671,7 @@ async function activateProfile(pid, keepRoute = false) {
   const data = await Store.load();
   const migrated = !!(data && data.__migrated);
   S = normalize(data || defaultState());
-  if (!data || migrated) await persist(true); // guarda (o migra) bajo la clave del perfil
+  await persist(true); // guarda (o migra) bajo la clave del perfil, incluidas actualizaciones de rutina
   go(keepRoute ? CUR : '#/inicio');
   if (migrated) toast('Tus datos anteriores quedaron en este perfil.');
 }
