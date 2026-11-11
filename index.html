@@ -1462,6 +1462,98 @@ function dayHero() {
     <div class="${primary ? 'grid2' : ''}" style="margin-top:14px">${primary}<button class="btn ${primary ? '' : 'block'}" style="margin:0" data-act="day-sheet" data-date="${t}">${primary ? 'Otra actividad' : 'Ver / agregar'}</button></div></div>`;
 }
 
+
+/* ---------- Balance energético del día ----------
+   Gasto total = metabolismo basal × actividad diaria (fuera del entrenamiento) + entrenamiento neto.
+   Metabolismo basal: Katch-McArdle si hay masa adiposa (usa la masa magra); si no, Mifflin-St Jeor.
+   Entrenamiento neto = gasto estimado − lo que igual se habría gastado en reposo (1 MET), para no contarlo dos veces. */
+const BODY_DEFAULT = {guada:{height:164, age:25, sex:'f'}, priscila:{height:171, age:25, sex:'f'}};
+const ACT_LEVELS = [[1.2, 'Sedentaria (trabajo de escritorio, poco movimiento)'], [1.3, 'Algo activa (escritorio + caminatas diarias)'], [1.45, 'Activa (de pie o caminando gran parte del día)']];
+function bodyCfg() { return Object.assign({act:1.2}, BODY_DEFAULT[PID] || {height:165, age:25, sex:'f'}, S.settings.body || {}); }
+function bmrAt(date) {
+  const ms = sortedMeas().filter(m => m.weight != null); const before = ms.filter(m => m.date <= date);
+  const m = (before.length ? before : ms).slice(-1)[0]; if (!m) return null;
+  const B = bodyCfg();
+  if (m.fatKg != null && m.fatKg > 0 && m.fatKg < m.weight) return {bmr:370 + 21.6 * (m.weight - m.fatKg), method:'Katch-McArdle (con tu masa magra)', w:m.weight};
+  const base = 10 * m.weight + 6.25 * B.height - 5 * B.age;
+  return {bmr:B.sex === 'm' ? base + 5 : base - 161, method:'Mifflin-St Jeor (peso, altura y edad)', w:m.weight};
+}
+function dayActivities(date) {
+  const out = [];
+  S.sessions.filter(x => x.status === 'done' && x.date === date).forEach(x => { const k = sessionKcal(x); if (!k) return; const d = dayOf(blockById(x.blockId) || activeBlock(), x.dayKey) || {name:'Gimnasio'};
+    out.push({label:'Gimnasio · ' + d.name, kcal:k.kcal, min:k.min + (x.cardio && num(x.cardio.minutes) ? num(x.cardio.minutes) : 0), color:d.color}); });
+  (S.boxing || []).filter(b => b.date === date).forEach(b => { const k = boxKcal(b); if (k) out.push({label:'Boxeo', kcal:k.kcal, min:b.duration || 0, color:BOX_COLOR}); });
+  S.runs.filter(r => r.date === date).forEach(r => { const k = runKcal(r); if (k) out.push({label:r.activity || PROFILE.cardioLabel, kcal:k.kcal, min:r.duration || 0, color:DAY_COLORS.run}); });
+  return out;
+}
+function dayBalance(date) {
+  const items = dayItemsOf(date); const intake = totalsOf(items);
+  const B = bmrAt(date); if (!B) return {noWeight:true, intake, foodCount:items.length};
+  const cfg = bodyCfg(); const base = B.bmr * cfg.act;
+  const acts = dayActivities(date).map(a => ({...a, net:Math.max(0, a.kcal - B.w * (a.min / 60))}));
+  const exercise = acts.reduce((s, a) => s + a.net, 0);
+  const burn = base + exercise;
+  return {intake, foodCount:items.length, bmr:B.bmr, method:B.method, act:cfg.act, base, nonEx:base - B.bmr, acts, exercise, burn, balance:intake.kcal - burn};
+}
+const k10 = n => (Math.round(n / 10) * 10).toLocaleString('es-AR');
+function balanceChart(days) {
+  const vals = days.map(d => d.b && d.b.foodCount ? d.b.balance : null);
+  const max = Math.max(300, ...vals.filter(v => v != null).map(v => Math.abs(v)));
+  const W = 340, H = 170, mid = 85, bw = 30, gap = (W - 7 * bw) / 8;
+  return `<svg class="chart" viewBox="0 0 ${W} ${H + 22}" role="img" aria-label="Balance de los últimos 7 días">
+    <line x1="0" x2="${W}" y1="${mid}" y2="${mid}" stroke="var(--line)" stroke-width="1.5"/>
+    ${days.map((d, i) => { const x = gap + i * (bw + gap); const v = vals[i];
+      if (v == null) return `<rect x="${x}" y="${mid - 2}" width="${bw}" height="4" rx="2" fill="var(--track)"/><text class="ax" x="${x + bw / 2}" y="${H + 16}" text-anchor="middle">${WD3[parseISO(d.date).getDay()]}</text>`;
+      const h = Math.max(3, Math.abs(v) / max * (mid - 14)); const y = v < 0 ? mid : mid - h;
+      return `<rect x="${x}" y="${y}" width="${bw}" height="${h}" rx="6" fill="${v < 0 ? 'var(--primary)' : '#D98A2B'}"><title>${k10(v)} kcal</title></rect>
+        <text class="ax" x="${x + bw / 2}" y="${v < 0 ? y + h + 12 : y - 4}" text-anchor="middle" style="font-size:10px">${v < 0 ? '−' : '+'}${k10(Math.abs(v))}</text>
+        <text class="ax" x="${x + bw / 2}" y="${H + 16}" text-anchor="middle">${WD3[parseISO(d.date).getDay()]}</text>`; }).join('')}
+  </svg>`;
+}
+function vBalance() {
+  const date = UI.balDate || todayISO(); const b = dayBalance(date); const isToday = date === todayISO();
+  const nav = `<div class="card" style="padding:10px 12px"><div class="row" style="justify-content:space-between">
+    <button class="iconbtn" data-act="bal-day" data-v="-1" aria-label="Día anterior">${ic('left')}</button>
+    <div style="text-align:center"><b style="font-size:17px">${isToday ? 'Hoy' : esc(fmtLong(date))}</b>${isToday ? '' : `<div><button class="linkbtn" data-act="bal-day" data-v="0">Ir a hoy</button></div>`}</div>
+    <button class="iconbtn" data-act="bal-day" data-v="1" aria-label="Día siguiente" ${isToday ? 'disabled style="opacity:.35"' : ''}>${ic('right')}</button></div></div>`;
+  if (b.noWeight) return nav + `<div class="empty" style="margin-top:10px"><b>Falta tu peso</b>Cargá una medición en Cuerpo para calcular tu gasto diario.</div>`;
+  const def = -b.balance; const hasFood = b.foodCount > 0;
+  const head = !hasFood ? `<div class="empty" style="margin-top:10px"><b>Sin comidas registradas ${isToday ? 'hoy' : 'ese día'}</b>Cargá lo que comiste en Comidas para ver si hubo déficit.</div>`
+    : `<div class="hero" style="--c:${def >= 0 ? 'var(--primary)' : '#B5713A'};margin-top:10px"><div class="k">${isToday ? 'Hasta ahora · el día no terminó' : 'Balance del día'}</div>
+      <div class="t">${def >= 0 ? 'Déficit' : 'Superávit'} de ${k10(Math.abs(def))} kcal</div>
+      <div class="d">Comiste ${k10(b.intake.kcal)} · gastaste ≈ ${k10(b.burn)} kcal</div></div>`;
+  const rowB = (l, v, sub, col) => `<div class="row" style="justify-content:space-between;padding:9px 0;border-top:1px solid var(--line)"><div><b style="font-size:15px">${l}</b>${sub ? `<div class="small muted">${sub}</div>` : ''}</div><b style="font-size:16px;${col ? 'color:' + col : ''}">${v}</b></div>`;
+  const breakdown = `<div class="section-title">Gasto del día <small>estimado</small></div><div class="card" style="padding:6px 16px 10px">
+    ${rowB('Metabolismo basal', '≈ ' + k10(b.bmr), esc(b.method))}
+    ${rowB('Actividad diaria', '≈ ' + k10(b.nonEx), `Fuera del entrenamiento · ${esc((ACT_LEVELS.find(x => x[0] === b.act) || [0, ''])[1].split(' (')[0])}`)}
+    ${b.acts.length ? b.acts.map(a => rowB(esc(a.label), '≈ ' + k10(a.net), `${a.min} min · neto (ya descontado el reposo)`, a.color)).join('') : rowB('Entrenamiento', '0', 'Sin actividad registrada ese día')}
+    ${rowB('Total gastado', '≈ ' + k10(b.burn), '')}
+    ${hasFood ? rowB('Comido', k10(b.intake.kcal), `P ${fmt1(b.intake.p)} · C ${fmt1(b.intake.c)} · G ${fmt1(b.intake.f)} g`) : ''}
+  </div>`;
+  const days = Array.from({length:7}, (_, i) => addDays(todayISO(), i - 6)).map(d => ({date:d, b:dayBalance(d)}));
+  const withFood = days.filter(d => d.b.foodCount && !(d.date === todayISO()));
+  const weekDef = withFood.reduce((s, d) => s - d.b.balance, 0); const avg = withFood.length ? weekDef / withFood.length : 0;
+  const week = `<div class="section-title">Últimos 7 días <small>${withFood.length} día${withFood.length === 1 ? '' : 's'} completos con comidas</small></div>
+    <div class="card" style="padding:12px 8px 6px">${balanceChart(days)}</div>
+    ${withFood.length ? `<div class="grid2" style="margin-top:8px"><div class="metric"><div class="l">${weekDef >= 0 ? 'Déficit acumulado' : 'Superávit acumulado'}</div><div class="v">${k10(Math.abs(weekDef))}<small>kcal</small></div></div>
+      <div class="metric"><div class="l">Promedio por día</div><div class="v">${avg >= 0 ? '−' : '+'}${k10(Math.abs(avg))}<small>kcal</small></div></div></div>
+      <p class="small muted" style="margin-top:8px">Como referencia, unas 7.700 kcal de déficit equivalen aproximadamente a 1 kg de grasa. Es orientativo: el agua, la sal y el ciclo mueven mucho el peso de un día a otro.</p>
+      ${avg > 1000 ? `<div class="banner warn" style="margin-top:8px">${ic('warn')}<div>El déficit promedio supera las 1.000 kcal por día. Para preservar músculo conviene que no sea tan grande: comentalo con tu nutricionista.</div></div>` : ''}` : ''}`;
+  const cfg = bodyCfg();
+  const foot = `<div class="banner info" style="margin-top:12px">${ic('info')}<div><b>Es una estimación</b> (margen de alrededor de ±10-15%). El gasto en reposo depende de tu peso, tu masa magra y tu movimiento diario. Solo se cuentan las comidas y actividades que registrás.
+    <button class="linkbtn" style="padding-left:0" data-act="body-cfg">Ajustar altura, edad y actividad diaria (${cfg.height} cm · ${cfg.age} años · ×${cfg.act})</button></div></div>`;
+  return nav + head + breakdown + week + foot;
+}
+function openBodyCfg() {
+  const c = bodyCfg();
+  openSheet('Datos para el gasto diario', `<form class="form" id="bodyform">
+    <div class="grid2"><div class="field"><label for="bc-h">Altura (cm)</label><input id="bc-h" name="height" inputmode="numeric" value="${c.height}"></div>
+    <div class="field"><label for="bc-a">Edad</label><input id="bc-a" name="age" inputmode="numeric" value="${c.age}"></div></div>
+    <div class="field"><label for="bc-act">Actividad diaria fuera del entrenamiento</label><select id="bc-act" name="act">${ACT_LEVELS.map(([v, l]) => `<option value="${v}" ${c.act === v ? 'selected' : ''}>${l}</option>`).join('')}</select>
+      <span class="hint">El entrenamiento, el boxeo y el running se suman aparte, según lo que registres. No los cuentes acá.</span></div>
+    <button type="button" class="btn block" data-act="body-cfg-save">${ic('check')} Guardar</button></form>`);
+}
+
 /* --- Inicio --- */
 function vHome() {
   const b = activeBlock(); const wk = blockWeek(b); const ms = sortedMeas(); const cur = ms[ms.length - 1]; const prev = ms[ms.length - 2];
@@ -1688,7 +1780,9 @@ function vProgress() {
   const filter = UI.progBlock;
   const inBlock = s => filter === 'all' || s.blockId === filter;
   let body = '';
-  if (UI.progTab === 'ejercicios') {
+  if (UI.progTab === 'balance') {
+    body = vBalance();
+  } else if (UI.progTab === 'ejercicios') {
     const map = new Map();
     S.sessions.filter(inBlock).forEach(s => Object.values(s.entries).forEach(e => {
       if (!e.saved) return; const k = e.exId; if (!map.has(k)) map.set(k, {exId:k, name:e.name, items:[], dayKey:s.dayKey});
@@ -1711,9 +1805,9 @@ function vProgress() {
     ${wk ? `<div class="metric" style="margin-bottom:12px;display:flex;justify-content:space-between;align-items:center"><div><div class="l">Gasto en entrenamientos esta semana</div><div class="v">≈ ${(Math.round(wk / 10) * 10).toLocaleString('es-AR')}<small>kcal</small></div></div><span class="small muted" style="text-align:right">estimado,<br>solo lo registrado</span></div>` : ''}`;
     body += total ? recentListFiltered(ss, rs, bs) : `<div class="empty"><b>Sin sesiones</b>Finalizá un entrenamiento para verlo acá.</div>`;
   }
-  return `<div class="topbar"><div><h1>Progreso</h1><div class="sub">Historial por ejercicio y sesiones</div></div></div>
-  <div class="seg" role="tablist"><button class="${UI.progTab === 'ejercicios' ? 'on' : ''}" data-act="prog-tab" data-v="ejercicios">Ejercicios</button><button class="${UI.progTab === 'sesiones' ? 'on' : ''}" data-act="prog-tab" data-v="sesiones">Sesiones</button></div>
-  <div class="blockchips" style="margin:12px 0">${[['all', 'Todos los bloques']].concat(blocks.map(b => [b.id, b.name])).map(([id, n]) => `<button class="${filter === id ? 'on' : ''}" data-act="prog-block" data-v="${id}">${esc(n)}</button>`).join('')}</div>
+  return `<div class="topbar"><div><h1>Progreso</h1><div class="sub">Ejercicios, sesiones y balance del día</div></div></div>
+  <div class="seg" role="tablist"><button class="${UI.progTab === 'ejercicios' ? 'on' : ''}" data-act="prog-tab" data-v="ejercicios">Ejercicios</button><button class="${UI.progTab === 'sesiones' ? 'on' : ''}" data-act="prog-tab" data-v="sesiones">Sesiones</button><button class="${UI.progTab === 'balance' ? 'on' : ''}" data-act="prog-tab" data-v="balance">Balance</button></div>
+  <div class="blockchips" style="margin:12px 0;${UI.progTab === 'balance' ? 'display:none' : ''}">${[['all', 'Todos los bloques']].concat(blocks.map(b => [b.id, b.name])).map(([id, n]) => `<button class="${filter === id ? 'on' : ''}" data-act="prog-block" data-v="${id}">${esc(n)}</button>`).join('')}</div>
   ${body}`;
 }
 const boxRow = b => `<button class="listrow" style="--c:${BOX_COLOR}" data-act="box-edit" data-id="${b.id}"><span class="bar"></span><span class="mid"><b>Boxeo</b><span>${fmtDate(b.date)}${b.duration ? ' · ' + b.duration + ' min' : ''}${b.type ? ' · ' + esc(b.type) : ''}${boxKcal(b) ? ' · ' + kcalTxt(boxKcal(b)) : ''}</span></span>${ic('right')}</button>`;
@@ -2475,6 +2569,9 @@ document.addEventListener('click', async e => {
     case 'sheet-close': closeSheet(); break;
     case 'start': startSession(d.day); break;
     case 'go-running': go('#/running'); break;
+    case 'bal-day': { const v = +d.v; UI.balDate = v === 0 ? todayISO() : addDays(UI.balDate || todayISO(), v); if (UI.balDate > todayISO()) UI.balDate = todayISO(); rerender(); break; }
+    case 'body-cfg': openBodyCfg(); break;
+    case 'body-cfg-save': { const fd = new FormData($('#bodyform')); S.settings.body = {height:num(fd.get('height')) || 165, age:num(fd.get('age')) || 25, sex:bodyCfg().sex, act:num(fd.get('act')) || 1.2}; await persist(true); closeSheet(); rerender(); toast('Datos guardados'); break; }
     case 'day-sheet': openDaySheet(d.date); break;
     case 'day-gym': closeSheet(true); if (d.date && d.date !== todayISO()) delete S.dayRest[d.date]; startSession(d.day, null, d.date); break;
     case 'go-session': go('#/sesion/' + d.id); break;
